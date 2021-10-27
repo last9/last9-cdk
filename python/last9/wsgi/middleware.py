@@ -1,11 +1,23 @@
+import os
+import sys
 import time
+import socket
 import inspect
+
 from flask import Flask, request, current_app
 from werkzeug.wrappers import Request, Response
 from timeit import default_timer
 
 from prometheus_client import Counter, Histogram
 from prometheus_client import generate_latest
+
+
+def get_program():
+    return os.path.basename(sys.argv[0])
+
+def get_hostname():
+    return socket.gethostname()
+
 
 http_requests_total = Counter(
         "http_requests_total", "Total HTTP requests per path",
@@ -53,15 +65,17 @@ def timed_function(fn):
     return inner
 
 class WsgiMiddleware(object):
-    def __init__(self, app, grouper=None):
+    def __init__(self, app, grouper=None, hostname=None, program=None):
         self.app = app
         self.grouper = grouper or per_path
+        self.hostname = hostname or get_hostname()
+        self.program = program or get_program()
 
     def metric_labels(self, request, response):
         return {
                 "per": self.grouper(request),
-                "hostname": "hostname",
-                "program": "my program",
+                "hostname": self.hostname,
+                "program": self.program,
                 "status": response.status_code,
                 "domain": request.environ.get("HTTP_HOST"),
                 "method": request.environ.get("REQUEST_METHOD")
@@ -90,9 +104,12 @@ class FlaskMiddleware(WsgiMiddleware):
     def serve_metrics(self):
         return generate_latest()
 
-    def __init__(self, app, grouper=None):
+    def __init__(self, app, grouper=None, hostname=None, program=None):
         self.app = app.wsgi_app
         self.grouper = grouper or per_rule
+        self.hostname = hostname or get_hostname()
+        self.program = program or get_program()
+
         # bind events on app for the lifecycle of a request.
         app.teardown_request(teardown_request_func)
 
@@ -113,10 +130,14 @@ class RedMiddleware(object):
     '''
     def __new__(self, app, grouper=None, *a, **kw):
         if isinstance(app, Flask):
-            return FlaskMiddleware(app, grouper)
+            return FlaskMiddleware(app, grouper,
+                    hostname=kw.get("hostname"),
+                    program=kw.get("program"))
 
         elif callable(app):
-            return WsgiMiddleware(app, grouper)
+            return WsgiMiddleware(app, grouper,
+                    hostname=kw.get("hostname"),
+                    program=kw.get("program"))
 
         raise Exception("Unsupported type")
 
