@@ -125,6 +125,9 @@ func Last9HttpHandler(next http.Handler) http.Handler {
 	case *mux.Router:
 		t.Use(Last9HttpHandler)
 		return t
+	case *pat.PatternServeMux:
+		t.Use(Last9HttpHandler)
+		return t
 	}
 	return Last9HttpPatternHandler(figureOutGrouper, next)
 }
