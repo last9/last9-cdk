@@ -1,0 +1,31 @@
+[?1049h[22;0t[?1h=[H[2J]11;?[?2004h[?25h[?25l(B[m[H[2J[23BError detected while processing /Users/meson10/.vimrc:[K[?1004h[?25h[?25l[22;24r[22;1H[38;2;248;248;242m[48;2;27;29;30m[2M[r[21;1H(B[0;1;7m[38;2;248;248;242m[48;2;27;29;30m                                                                                
+
+(B[m[38;2;248;248;242m[48;2;27;29;30mline   71:[K
+E518: Unknown option: ttyscroll=3[K]112[1 q]112[1 q[H[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K(B[0;1;7m[38;2;248;248;242m[48;2;27;29;30m
+                                                                                
+(B[m[38;2;248;248;242m[48;2;27;29;30mError detected while processing /Users/meson10/.vimrc:[K
+line   71:[K
+E518: Unknown option: ttyscroll=3[K[24;1H(B[0;1m[38;2;255;255;255m[48;2;51;51;51mairline: Could not resolve airline theme "molokai". Themes have been migrated t[20;24r[20;1H(B[m[38;2;248;248;242m[48;2;27;29;30m[M[r[24;1H[J[23;80H(B[0;1m[38;2;255;255;255m[48;2;51;51;51mo
+ github.com/vim-airline/vim-airline-themes.(B[m[38;2;248;248;242m[48;2;27;29;30m[K]112[2 q[?25h[?25l[19;24r[19;1H[M[r[24;1H(B[0;1m[38;2;46;139;87m[48;2;27;29;30mPress ENTER or type command to continue(B[m[38;2;248;248;242m[48;2;27;29;30m[K[?25hVim: Caught deadly signal 'SIGHUP'
+
+Vim: Finished.
+[?25l[24;1H[?25h[?25l]112[2 q(B[m[?25h[?1l>[?1049l[23;0t[?2004l[?1004l[?25h
