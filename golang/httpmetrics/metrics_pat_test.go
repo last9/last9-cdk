@@ -1,7 +1,6 @@
 package httpmetrics
 
 import (
-	"log"
 	"net/http"
 	"testing"
 
@@ -14,9 +13,6 @@ func patHandler() http.HandlerFunc {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-
-			log.Println("-----1 pat", r.URL.Query())
-			log.Println("-----1 pat", r.Context().Value(pat.RouteKey))
 			w.Write([]byte(r.URL.Query().Get(":id")))
 		},
 	)
