@@ -28,6 +28,7 @@ var (
 		prometheus.HistogramOpts{
 			Name: "http_requests_duration",
 			Help: "HTTP requests duration per path",
+			Buckets: LatencyBins,
 		},
 		[]string{"per", "hostname", "domain", "method", "program", "status"},
 	)
@@ -95,7 +96,7 @@ func Last9HttpPatternHandler(g Grouper, next http.Handler) http.Handler {
 		labels := prometheus.Labels{
 			"program":  getProgamName(),
 			"hostname": getHostname(),
-			"domain":   r.URL.Host,
+			"domain":   r.Host,
 			"method":   r.Method,
 		}
 

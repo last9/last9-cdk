@@ -57,7 +57,7 @@ func TestMux(t *testing.T) {
 
 		assert.Equal(t, len(idCount), len(o["http_requests_total"].GetMetric()))
 		assert.Equal(t, o["http_requests_duration"].GetType(), dto.MetricType_HISTOGRAM)
-		assert.Equal(t, 3, assertLabels("/api", o["http_requests_duration"]))
+		assert.Equal(t, 4, assertLabels("/api", getDomain(srv), o["http_requests_duration"]))
 	})
 
 	t.Run("wrapped mux captures pattern", func(t *testing.T) {
@@ -77,8 +77,8 @@ func TestMux(t *testing.T) {
 		}
 
 		assert.Equal(t, o["http_requests_duration"].GetType(), dto.MetricType_HISTOGRAM)
-		assert.Equal(t, 3, assertLabels("/api", o["http_requests_duration"]))
-		assert.Equal(t, 4, assertLabels("/api/", o["http_requests_duration"]))
+		assert.Equal(t, 4, assertLabels("/api", getDomain(srv), o["http_requests_duration"]))
+		assert.Equal(t, 5, assertLabels("/api/", getDomain(srv), o["http_requests_duration"]))
 		assert.Equal(t, *(o["http_requests_total"].GetMetric()[0].Counter.Value), 10.0)
 	})
 
@@ -105,8 +105,8 @@ func TestMux(t *testing.T) {
 		}
 
 		assert.Equal(t, o["http_requests_duration"].GetType(), dto.MetricType_HISTOGRAM)
-		assert.Equal(t, 3, assertLabels("/api", o["http_requests_duration"]))
-		assert.Equal(t, 4, assertLabels("my_custom_path_static", o["http_requests_duration"]))
+		assert.Equal(t, 4, assertLabels("/api", getDomain(srv), o["http_requests_duration"]))
+		assert.Equal(t, 5, assertLabels("my_custom_path_static", getDomain(srv), o["http_requests_duration"]))
 		assert.Equal(t, *(o["http_requests_total"].GetMetric()[0].Counter.Value), 10.0)
 	})
 }
