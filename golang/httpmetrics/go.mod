@@ -1,4 +1,4 @@
-module github.com/last9-go-cdk/httpmetrics
+module github.com/last9/last9-cdk/golang/httpmetrics
 
 go 1.17
 
