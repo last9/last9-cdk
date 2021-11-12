@@ -17,5 +17,10 @@ jobs:
     - name: Checkout Repo
       uses: actions/checkout@v2
 
+    - uses: actions/cache@v2
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-l9cdk-${{ hashFiles('golang/httpmetrics/go.sum') }}
+
     - name: Test
       run: cd golang/httpmetrics; go test -v ./...
