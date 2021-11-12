@@ -1,5 +1,4 @@
 name: Golang HTTP Metrics CDK
-
 on:
   push:
     paths:
