@@ -1,0 +1,21 @@
+name: Golang HTTP Metrics CDK
+on:
+  push:
+    paths:
+      - 'golang/httpmetrics/**'
+      - '.github/workflows/golang_httpmetrics.yml'
+
+jobs:
+  Test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/setup-go@v2
+      with:
+        go-version: "1.17"
+
+    - name: Checkout Repo
+      uses: actions/checkout@v1
+
+    - name: Test
+      run: cd golang/httpmetrics; go mod tidy; go test -v ./...
