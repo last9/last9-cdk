@@ -85,6 +85,10 @@ func makeServer(mux http.Handler) *httptest.Server {
 	return httptest.NewServer(mux)
 }
 
+func getDomain(s *httptest.Server) string {
+	return strings.Split(s.URL, "//")[1]
+}
+
 // assertLabels returns a count of how many "expected" labels match
 // for the provided endpoint pattern
 // Example:
@@ -93,7 +97,7 @@ func makeServer(mux http.Handler) *httptest.Server {
 // So a request to /api/1
 // will yield http_requests_total{program=,hostname=,status=,per=[either /api/1 or /api/:id}
 // where program hostname and status won't change.
-func assertLabels(per string, m *dto.MetricFamily) int {
+func assertLabels(per string, domain string, m *dto.MetricFamily) int {
 	success := 0
 	labels := m.GetMetric()[0].GetLabel()
 	for _, l := range labels {
@@ -113,6 +117,10 @@ func assertLabels(per string, m *dto.MetricFamily) int {
 			}
 		case "per":
 			if val == per {
+				success++
+			}
+		case "domain":
+			if val == domain {
 				success++
 			}
 		}

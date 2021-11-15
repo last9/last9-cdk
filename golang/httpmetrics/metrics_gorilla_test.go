@@ -42,7 +42,7 @@ func TestGorillaMux(t *testing.T) {
 		assert.Equal(t, len(ids) > 0, true)
 		assert.Equal(t, 1, len(o["http_requests_total"].GetMetric()))
 		assert.Equal(t, 1, len(o["http_requests_duration"].GetMetric()))
-		assert.Equal(t, 4, assertLabels("/api/{id}", o["http_requests_duration"]))
+		assert.Equal(t, 5, assertLabels("/api/{id}", getDomain(srv), o["http_requests_duration"]))
 	})
 
 	t.Run("wrapped gorilla mux captures path", func(t *testing.T) {
@@ -69,7 +69,7 @@ func TestGorillaMux(t *testing.T) {
 		assert.Equal(t, len(ids) > 0, true)
 		assert.Equal(t, 1, len(o["http_requests_total"].GetMetric()))
 		assert.Equal(t, 1, len(o["http_requests_duration"].GetMetric()))
-		assert.Equal(t, 4, assertLabels("/api/{id}", o["http_requests_duration"]))
+		assert.Equal(t, 5, assertLabels("/api/{id}", getDomain(srv), o["http_requests_duration"]))
 	})
 
 	t.Run("gorilla mux middleware captures path", func(t *testing.T) {
@@ -96,6 +96,6 @@ func TestGorillaMux(t *testing.T) {
 		assert.Equal(t, len(ids) > 0, true)
 		assert.Equal(t, 1, len(o["http_requests_total"].GetMetric()))
 		assert.Equal(t, 1, len(o["http_requests_duration"].GetMetric()))
-		assert.Equal(t, 4, assertLabels("/api/{id}", o["http_requests_duration"]))
+		assert.Equal(t, 5, assertLabels("/api/{id}", getDomain(srv), o["http_requests_duration"]))
 	})
 }
