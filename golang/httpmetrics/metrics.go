@@ -2,44 +2,56 @@ package httpmetrics
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"net/http"
-	"path"
 	"strconv"
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/last9-cdk/proc"
 	"github.com/last9/pat"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+)
+
+const (
+	labelDomain = "domain"
+	labelMethod = "method"
+	labelStatus = "status"
+	labelPer    = "per"
 )
 
 var (
-	httpRequestsTotal = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "http_requests_total",
-			Help: "Total HTTP requests per path",
-		},
-		[]string{"per", "hostname", "domain", "method", "program", "status"},
-	)
+	// defaultLabels that are provided to the Request metric.
+	defaultLabels = []string{
+		labelPer, proc.LabelHostname, labelDomain, labelMethod, proc.LabelProgram,
+		labelStatus, proc.LabelTenant, proc.LabelCluster,
+	}
 
+	// the ONLY metric that we emit is httpRequestsDuration
+	// which can provide for all three values:
+	// - Rate (every histogram has a _sum and _count!!)
+	// - Errors (by observing the status)
+	// - Duration (It's a histogram!!)
 	httpRequestsDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name: "http_requests_duration",
-			Help: "HTTP requests duration per path",
-			Buckets: LatencyBins,
+			Name:    "http_requests_duration_milliseconds",
+			Help:    "HTTP requests duration per path",
+			Buckets: proc.LatencyBins,
 		},
-		[]string{"per", "hostname", "domain", "method", "program", "status"},
+		defaultLabels,
 	)
+
+	enableMiddleware = last9Ctx("enabled")
 )
 
 func init() {
 	// Metrics have to be registered to be exposed:
-	prometheus.MustRegister(httpRequestsTotal)
 	prometheus.MustRegister(httpRequestsDuration)
 }
 
+// responseWriter is a status hijacker since http.ResponseWriter is an
+// interface and unlike http.Request it cannot expose the value of the status
+// once previously set during the lifetime of a handler.
+// We rely on the status code to be emitted as one of the labels.
 type responseWriter struct {
 	w    http.ResponseWriter
 	resp []byte
@@ -68,12 +80,17 @@ func (rw *responseWriter) CloseNotify() <-chan bool {
 	return rw.w.(http.CloseNotifier).CloseNotify()
 }
 
-type Grouper func(r *http.Request, mux http.Handler) string
-
 type last9Ctx string
 
-var enableMiddleware = last9Ctx("enabled")
-
+// middlewarePreEnabled looks for context key to rule out if the middleware
+// was pre-applied.
+//
+// When could this happen?
+// Imagine a scenario where a handler was wrapped as a middleware
+// as 		m.Get("/api/:id", REDHandler(patHandler()))
+// and subsequently, the whole mux was ALSO wrapped
+// as 		m.Use(REDHandler)
+// Only of the two middlewares is worth executing.
 func middlewarePreEnabled(r *http.Request) bool {
 	rv := r.Context().Value(middlewarePreEnabled)
 	if rv != nil && rv.(string) == "true" {
@@ -83,10 +100,21 @@ func middlewarePreEnabled(r *http.Request) bool {
 	return false
 }
 
-func Last9HttpPatternHandler(g Grouper, next http.Handler) http.Handler {
+// CustomREDHandler is a 3rd way to wrap a handler with a custom labelMaker
+// This may become the most favorible middleware for developers who want to
+// wrap each handler of theirs, instead of wrapping the entire mux.
+//
+// In scenarios where the mux does not support Middlewares out-of-the-box
+// like pat, does not have a .Use method this function becomes the go-to.
+//
+// How to use?
+// mux.Handle("/api/", CustomREDHandler(labelMaker, basicHandler()))
+func CustomREDHandler(g LabelMaker, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rw := &responseWriter{w: w}
 
+		// If the middleware was already executed, skip this.
+		// read the function definition for scenarios where this is applicable.
 		if middlewarePreEnabled(r) {
 			next.ServeHTTP(rw, r)
 			return
@@ -94,10 +122,12 @@ func Last9HttpPatternHandler(g Grouper, next http.Handler) http.Handler {
 
 		start := time.Now()
 		labels := prometheus.Labels{
-			"program":  getProgamName(),
-			"hostname": getHostname(),
-			"domain":   r.Host,
-			"method":   r.Method,
+			proc.LabelProgram:  proc.GetProgamName(),
+			proc.LabelHostname: proc.GetHostname(),
+			proc.LabelTenant:   "", // default tenant is empty
+			proc.LabelCluster:  "", // default cluster is empty
+			labelDomain:        r.Host,
+			labelMethod:        r.Method,
 		}
 
 		ctx := context.WithValue(r.Context(), enableMiddleware, "true")
@@ -105,61 +135,62 @@ func Last9HttpPatternHandler(g Grouper, next http.Handler) http.Handler {
 
 		defer func() {
 			// Status code and path can only be known AFTER the mux was invoked.
-			labels["per"] = g(r, next)
-			labels["status"] = strconv.Itoa(rw.code)
+			// Some of the middleware alter the request BUT they create a new
+			// request with context so the original request is untampered.
+			// Hence delay this as late as possible to get the freshest/latest
+			// value of the parameters.
+			for k, v := range g(r, next) {
+				// run through the defaultLabels and attempt to set, ONLY if
+				// its an expected labelKey. An attempt to set something else
+				// results in prometheus client library panicking, and that would
+				// mean NO metric.
+				for _, l := range defaultLabels {
+					if k == l {
+						labels[k] = v
+						break
+					}
+				}
+			}
 
-			httpRequestsTotal.With(labels).Inc()
+			// Status code can only be known AFTER the mux was invoked.
+			labels[labelStatus] = strconv.Itoa(rw.code)
+
 			httpRequestsDuration.With(labels).Observe(
 				float64(time.Since(start).Milliseconds()),
 			)
 		}()
 
-		//add the header
 		//call the wrapped handler
 		next.ServeHTTP(rw, r)
 
 	})
 }
 
-func Last9HttpHandler(next http.Handler) http.Handler {
-	switch t := next.(type) {
-	case *mux.Router:
-		t.Use(Last9HttpHandler)
-		return t
-	case *pat.PatternServeMux:
-		t.Use(Last9HttpHandler)
-		return t
+// REDHandlerWithLabelMaker is the 2nd choice of wrapping the entire Mux
+// with a middleware. Passing the middleware to a mux is a fairly common
+// technique with the likes of gorilla etc.
+// How to Use?
+// m.Use(REDHandlerWithLabelMaker(labelMaker))
+func REDHandlerWithLabelMaker(g LabelMaker) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		switch t := next.(type) {
+		case *mux.Router:
+			t.Use(REDHandlerWithLabelMaker(g))
+			return t
+		case *pat.PatternServeMux:
+			t.Use(REDHandlerWithLabelMaker(g))
+			return t
+		}
+		return CustomREDHandler(g, next)
 	}
-	return Last9HttpPatternHandler(figureOutGrouper, next)
 }
 
-func figureOutGrouper(r *http.Request, m http.Handler) string {
-	switch t := m.(type) {
-	case *http.ServeMux:
-		_, p := t.Handler(r)
-		return p
-	case *mux.Router: // gorilla mux uses this
-		if cr := mux.CurrentRoute(r); cr != nil {
-			if p, err := cr.GetPathTemplate(); err == nil {
-				return p
-			}
-		}
-	default:
-		if rk := r.Context().Value(pat.RouteKey); rk != nil {
-			return rk.(string)
-		} else if cr := mux.CurrentRoute(r); cr != nil {
-			if p, err := cr.GetPathTemplate(); err == nil {
-				return p
-			}
-		}
-	}
-
-	return path.Clean(r.URL.Path)
-}
+// REDHandler is a REDHandlerWithLabelMaker where default labelMaker is used.
+// If you have custom metric emission where you need to extract unique parts
+// of the request path, body etc. use REDHandlerWithLabelMaker instead
+var REDHandler = REDHandlerWithLabelMaker(figureOutLabelMaker)
 
 // ServeMetrics exposes whatever prometheus metrics are, on specified Port
 func ServeMetrics(port int) {
-	log.Println("Serving metrics on", port)
-	http.Handle("/metrics", promhttp.Handler())
-	http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
+	proc.ServeMetrics(port)
 }

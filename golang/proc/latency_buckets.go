@@ -1,4 +1,4 @@
-package httpmetrics
+package proc
 
 import "math"
 

@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/last9-cdk/proc"
+	"github.com/last9-cdk/tests"
 	"github.com/last9/pat"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"gopkg.in/go-playground/assert.v1"
@@ -23,25 +25,25 @@ func TestPatMux(t *testing.T) {
 		resetMetrics()
 
 		m := pat.New()
-		m.Get("/api/:id", Last9HttpHandler(patHandler()))
+		m.Get("/api/:id", REDHandler(patHandler()))
 		m.Get("/metrics", promhttp.Handler())
-		srv := makeServer(m)
+		srv := tests.MakeServer(m)
 		defer srv.Close()
 
-		ids, err := sendTestRequests(srv.URL, 2)
+		ids, err := tests.SendTestRequests(srv.URL, 2)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		o, err := getMetrics(srv.URL)
+		o, err := tests.GetMetrics(srv.URL)
 		if err != nil {
 			t.Fatal(err)
 		}
 
+		req := o["http_requests_duration_milliseconds"]
 		assert.Equal(t, len(ids) > 0, true)
-		assert.Equal(t, 1, len(o["http_requests_total"].GetMetric()))
-		assert.Equal(t, 1, len(o["http_requests_duration"].GetMetric()))
-		assert.Equal(t, 5, assertLabels("/api/:id", getDomain(srv), o["http_requests_duration"]))
+		assert.Equal(t, 1, len(req.GetMetric()))
+		assert.Equal(t, 7, assertLabels("/api/:id", getDomain(srv), req))
 	})
 
 	t.Run("wrapped pat mux captures path", func(t *testing.T) {
@@ -50,24 +52,23 @@ func TestPatMux(t *testing.T) {
 		m := pat.New()
 		m.Get("/api/:id", patHandler())
 		m.Get("/metrics", promhttp.Handler())
-		srv := makeServer(Last9HttpHandler(m))
+		srv := tests.MakeServer(REDHandler(m))
 		defer srv.Close()
 
-		ids, err := sendTestRequests(srv.URL, 2)
+		ids, err := tests.SendTestRequests(srv.URL, 2)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		o, err := getMetrics(srv.URL)
+		o, err := tests.GetMetrics(srv.URL)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		// log.Println(o["http_requests_total"], o)
+		req := o["http_requests_duration_milliseconds"]
 		assert.Equal(t, len(ids) > 0, true)
-		assert.Equal(t, 1, len(o["http_requests_total"].GetMetric()))
-		assert.Equal(t, 1, len(o["http_requests_duration"].GetMetric()))
-		assert.Equal(t, 5, assertLabels("/api/:id", getDomain(srv), o["http_requests_duration"]))
+		assert.Equal(t, 1, len(req.GetMetric()))
+		assert.Equal(t, 7, assertLabels("/api/:id", getDomain(srv), req))
 	})
 
 	t.Run("pat mux uses middleware", func(t *testing.T) {
@@ -76,51 +77,86 @@ func TestPatMux(t *testing.T) {
 		m := pat.New()
 		m.Get("/api/:id", patHandler())
 		m.Get("/metrics", promhttp.Handler())
-		m.Use(Last9HttpHandler)
-		srv := makeServer(m)
+		m.Use(REDHandler)
+		srv := tests.MakeServer(m)
 		defer srv.Close()
 
-		ids, err := sendTestRequests(srv.URL, 2)
+		ids, err := tests.SendTestRequests(srv.URL, 2)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		o, err := getMetrics(srv.URL)
+		o, err := tests.GetMetrics(srv.URL)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		// log.Println(o["http_requests_total"], o)
+		req := o["http_requests_duration_milliseconds"]
 		assert.Equal(t, len(ids) > 0, true)
-		assert.Equal(t, 1, len(o["http_requests_total"].GetMetric()))
-		assert.Equal(t, 1, len(o["http_requests_duration"].GetMetric()))
-		assert.Equal(t, 5, assertLabels("/api/:id", getDomain(srv), o["http_requests_duration"]))
+		assert.Equal(t, 1, len(req.GetMetric()))
+		assert.Equal(t, 7, assertLabels("/api/:id", getDomain(srv), req))
 	})
 
 	t.Run("pat mux uses reudundant middlewares", func(t *testing.T) {
 		resetMetrics()
 
 		m := pat.New()
-		m.Get("/api/:id", Last9HttpHandler(patHandler()))
+		m.Get("/api/:id", REDHandler(patHandler()))
 		m.Get("/metrics", promhttp.Handler())
-		m.Use(Last9HttpHandler)
-		srv := makeServer(Last9HttpHandler(m))
+		m.Use(REDHandler)
+		srv := tests.MakeServer(REDHandler(m))
 		defer srv.Close()
 
-		ids, err := sendTestRequests(srv.URL, 2)
+		ids, err := tests.SendTestRequests(srv.URL, 2)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		o, err := getMetrics(srv.URL)
+		o, err := tests.GetMetrics(srv.URL)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		// log.Println(o["http_requests_total"], o)
+		req := o["http_requests_duration_milliseconds"]
 		assert.Equal(t, len(ids) > 0, true)
-		assert.Equal(t, 1, len(o["http_requests_total"].GetMetric()))
-		assert.Equal(t, 1, len(o["http_requests_duration"].GetMetric()))
-		assert.Equal(t, 5, assertLabels("/api/:id", getDomain(srv), o["http_requests_duration"]))
+		assert.Equal(t, 1, len(req.GetMetric()))
+		assert.Equal(t, 7, assertLabels("/api/:id", getDomain(srv), req))
+	})
+
+	t.Run("pat custom label middlewares", func(t *testing.T) {
+		resetMetrics()
+
+		m := pat.New()
+		m.Get("/api/:id", patHandler())
+		m.Get("/metrics", promhttp.Handler())
+		m.Use(REDHandlerWithLabelMaker(
+			func(r *http.Request, mux http.Handler) map[string]string {
+				return map[string]string{
+					labelPer:         "/path",
+					proc.LabelTenant: r.URL.Query().Get(":id"),
+				}
+			},
+		))
+
+		srv := tests.MakeServer(m)
+		defer srv.Close()
+
+		if _, err := tests.SendTestRequests(srv.URL, 5); err != nil {
+			t.Fatal(err)
+		}
+
+		o, err := tests.GetMetrics(srv.URL)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		req := o["http_requests_duration_milliseconds"]
+		for _, m := range req.GetMetric() {
+			for _, l := range m.GetLabel() {
+				if l.GetName() == "tenant" && l.GetValue() == "" {
+					t.Fatal("Expected non empty tenants")
+				}
+			}
+		}
 	})
 }
