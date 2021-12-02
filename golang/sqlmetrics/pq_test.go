@@ -12,6 +12,7 @@ import (
 	"github.com/last9-cdk/proc"
 	"github.com/last9-cdk/tests"
 	_ "github.com/lib/pq"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	dto "github.com/prometheus/client_model/go"
 	"gotest.tools/assert"
@@ -29,6 +30,12 @@ func getDB() (*sql.DB, error) {
 func resetMetrics() {
 	tests.ResetMetrics(sqlQueryDuration)
 }
+
+var expectedMetric = prometheus.BuildFQName(
+	proc.Namespace,
+	subsystem,
+	"query_duration_milliseconds",
+)
 
 func TestPq(t *testing.T) {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
@@ -155,7 +162,7 @@ func TestPq(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		req := o["sql_query_duration_milliseconds"]
+		req := o[expectedMetric]
 		assert.Equal(t, req.GetType(), dto.MetricType_HISTOGRAM)
 		for _, m := range req.GetMetric() {
 			h := m.GetHistogram()
@@ -165,8 +172,7 @@ func TestPq(t *testing.T) {
 				m.GetLabel(), map[string]string{
 					"cluster":  "",
 					"tenant":   "",
-					"dbhost":   "",
-					"dbname":   "",
+					"dbname":   "last9",
 					"hostname": proc.GetHostname(),
 					"program":  proc.GetProgamName(),
 					"status":   "success",

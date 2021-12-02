@@ -8,6 +8,7 @@ import (
 )
 
 var (
+	subsystem     = "sql"
 	defaultLabels = []string{
 		"per", proc.LabelHostname, "table", "dbname", "dbhost", "status",
 		proc.LabelProgram, proc.LabelTenant, proc.LabelCluster,
@@ -15,7 +16,11 @@ var (
 
 	sqlQueryDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "sql_query_duration_milliseconds",
+			Name: prometheus.BuildFQName(
+				proc.Namespace,
+				subsystem,
+				"query_duration_milliseconds",
+			),
 			Help:    "SQL duration per query",
 			Buckets: proc.LatencyBins,
 		},
@@ -28,23 +33,10 @@ func init() {
 	prometheus.MustRegister(sqlQueryDuration)
 }
 
-// queryStatus is an enumeration.
-type queryStatus int
-
-const (
-	success queryStatus = iota
-	failure
-)
-
-// String method on queryStatus comes handy when printing or creating labels.
-func (q queryStatus) String() string {
-	return [...]string{"success", "failure"}[q]
-}
-
 func emitDuration(
-	ls map[string]string, status queryStatus, start time.Time,
+	ls LabelSet, status queryStatus, start time.Time,
 ) error {
-	labels := map[string]string{}
+	labels := LabelSet{}
 	for _, k := range defaultLabels {
 		labels[k] = ""
 	}
@@ -61,7 +53,7 @@ func emitDuration(
 		}
 	}
 
-	sqlQueryDuration.With(labels).Observe(
+	sqlQueryDuration.With(labels.ToMap()).Observe(
 		float64(time.Since(start).Milliseconds()),
 	)
 

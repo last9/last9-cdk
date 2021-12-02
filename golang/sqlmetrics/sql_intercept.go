@@ -88,72 +88,92 @@ func RegisterDBWithLabelMaker(d string, fn LabelMaker) (string, error) {
 
 	name := driverName(d)
 
-	sql.Register(name, proxy.NewProxyContext(db.Driver(), &proxy.HooksContext{
-		PreExec: func(
-			c context.Context, stmt *proxy.Stmt, args []driver.NamedValue,
-		) (interface{}, error) {
-			return &dbCtx{start: time.Now(), query: stmt.QueryString}, nil
-		},
+	sql.Register(name, proxy.NewProxyContext(
+		//&wrapDriver{original: db.Driver()},
+		db.Driver(),
+		&proxy.HooksContext{
+			PreOpen: func(c context.Context, dsn string) (interface{}, error) {
+				return dsn, nil
+			},
 
-		PostExec: func(
-			c context.Context, ctx interface{}, stmt *proxy.Stmt,
-			args []driver.NamedValue, result driver.Result, err error,
-		) error {
-			if ctx == nil {
+			PostOpen: func(
+				c context.Context, ctx interface{}, conn *proxy.Conn, err error,
+			) error {
+				dsn := ctx.(string)
+				storeConnInfo(conn, dsn)
 				return nil
-			}
+			},
 
-			dc := ctx.(*dbCtx)
-			if err := emitDuration(
-				fn(dc.query), getQueryStatus(err), dc.start,
-			); err != nil {
-				log.Printf("%+v", err)
-			}
-			return nil
-		},
+			PreExec: func(
+				c context.Context, stmt *proxy.Stmt, args []driver.NamedValue,
+			) (interface{}, error) {
+				return &dbCtx{start: time.Now(), query: stmt.QueryString}, nil
+			},
 
-		PreQuery: func(
-			c context.Context, stmt *proxy.Stmt, args []driver.NamedValue,
-		) (interface{}, error) {
-			return &dbCtx{start: time.Now(), query: stmt.QueryString}, nil
-		},
+			PostExec: func(
+				c context.Context, ctx interface{}, stmt *proxy.Stmt,
+				args []driver.NamedValue, result driver.Result, err error,
+			) error {
+				if ctx == nil {
+					return nil
+				}
 
-		PostQuery: func(
-			c context.Context, ctx interface{}, stmt *proxy.Stmt,
-			args []driver.NamedValue, rows driver.Rows, err error,
-		) error {
-			if ctx == nil {
+				info := loadConnInfo(stmt.Conn)
+				dc := ctx.(*dbCtx)
+
+				if err := emitDuration(
+					fn(dc.query).Merge(info.LabelSet()), getQueryStatus(err), dc.start,
+				); err != nil {
+					log.Printf("%+v", err)
+				}
 				return nil
-			}
+			},
 
-			dc := ctx.(*dbCtx)
-			if err := emitDuration(
-				fn(dc.query), getQueryStatus(err), dc.start,
-			); err != nil {
-				log.Printf("%+v", err)
-			}
+			PreQuery: func(
+				c context.Context, stmt *proxy.Stmt, args []driver.NamedValue,
+			) (interface{}, error) {
+				return &dbCtx{start: time.Now(), query: stmt.QueryString}, nil
+			},
 
-			return nil
+			PostQuery: func(
+				c context.Context, ctx interface{}, stmt *proxy.Stmt,
+				args []driver.NamedValue, rows driver.Rows, err error,
+			) error {
+				if ctx == nil {
+					return nil
+				}
+
+				info := loadConnInfo(stmt.Conn)
+				dc := ctx.(*dbCtx)
+
+				if err := emitDuration(
+					fn(dc.query).Merge(info.LabelSet()), getQueryStatus(err), dc.start,
+				); err != nil {
+					log.Printf("%+v", err)
+				}
+
+				return nil
+			},
+
+			PreBegin: func(
+				c context.Context, conn *proxy.Conn,
+			) (interface{}, error) {
+				return nil, nil
+			},
+
+			PostCommit: func(
+				c context.Context, ctx interface{}, tx *proxy.Tx, err error,
+			) error {
+				return nil
+			},
+
+			PostRollback: func(
+				c context.Context, ctx interface{}, tx *proxy.Tx, err error,
+			) error {
+				return nil
+			},
 		},
-
-		PreBegin: func(
-			c context.Context, conn *proxy.Conn,
-		) (interface{}, error) {
-			return nil, nil
-		},
-
-		PostCommit: func(
-			c context.Context, ctx interface{}, tx *proxy.Tx, err error,
-		) error {
-			return nil
-		},
-
-		PostRollback: func(
-			c context.Context, ctx interface{}, tx *proxy.Tx, err error,
-		) error {
-			return nil
-		},
-	}))
+	))
 
 	// mark this driver as enabled.
 	enabled.Store(d, name)
