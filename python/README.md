@@ -4,7 +4,7 @@ Last9 Python CDK is a way to emit commonly aggregated metrics straight from your
 
 ### Why
 
-Traditional metrics emitters emit, per-path or handler-based metrics. Both these approaches have their drawbacks. 
+Traditional metrics emitters emit, per-path or handler-based metrics. Both these approaches have their drawbacks.
 
 - Per-path-based metrics can explode the cardinality because `/user/foo` `/user/bar` and so on can result in millions of endpoints
 - handler-based metrics can absorb details of the route details.
@@ -16,14 +16,10 @@ Traditional metrics emitters emit, per-path or handler-based metrics. Both these
 The very first metrics to be emitted are Rate, Error, and Duration. The following two metrics are enough to populate that.
 
 ```
-http_requests_total = Counter(
-  "http_requests_total", "Total HTTP requests per path",
-  ["per", "hostname", "domain", "method", "program", "status"]
-)
-
-http_requests_duration = Histogram(
+http_requests_duration_milliseconds = Histogram(
 	"http_requests_duration", "HTTP requests duration per path",
-  ["per", "hostname", "domain", "method", "program", "status"]
+  ["per", "hostname", "domain", "method", "program", "status",
+  "tenant", "cluster"]
 )
 ```
 
@@ -35,7 +31,7 @@ You can read more about the Prometheus exposition format on the [link](https://g
 
 ### Python Support
 
-The most common frameworks in Python are WSGI-based. While WSGI-based implementation can have a generic enough way to capture duration, status_code, method, domain name, etc. 
+The most common frameworks in Python are WSGI-based. While WSGI-based implementation can have a generic enough way to capture duration, status_code, method, domain name, etc.
 It cannot produce the path pattern used for the handler invocation, that information only resides with the Mux involved.
 
 Hence, there may be parts to the CDK which are activated ONLY when supported frameworks are detected or declared.
@@ -68,9 +64,9 @@ def hello_static():
 
 if __name__ == "__main__":
     app.run('127.0.0.1', '5000', debug=True)
-    
+
 ```
-    
+
  3. Generate sample traffic by calling `curl -s -k 'GET' 'http://localhost:5000/name/[1-10]'`
  4. Metrics will be exposed on `/metrics` endpoint.
 
@@ -79,7 +75,7 @@ if __name__ == "__main__":
 
 | Name   | Supported  | Mux Supported  |
 |---|---|---|
-| Flask  | Yes   | Yes  | 
+| Flask  | Yes   | Yes  |
 | Tornado |  - | -  |
 | Django  |  - | -  |
 | Pyramid  |  - | -  |

@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"testing"
 
-	"gopkg.in/go-playground/assert.v1"
-
+	"github.com/last9-cdk/tests"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	dto "github.com/prometheus/client_model/go"
+	"gopkg.in/go-playground/assert.v1"
 )
 
 func basicHandler() http.HandlerFunc {
@@ -31,82 +31,92 @@ func TestMux(t *testing.T) {
 		resetMetrics()
 
 		mux := http.NewServeMux()
-		mux.Handle("/api/", Last9HttpHandler(basicHandler()))
+		mux.Handle("/api/", REDHandler(basicHandler()))
 
-		srv := makeServer(bindMetrics(mux))
+		srv := tests.MakeServer(bindMetrics(mux))
 		defer srv.Close()
 
-		ids, err := sendTestRequests(srv.URL, 10)
+		ids, err := tests.SendTestRequests(srv.URL, 10)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		o, err := getMetrics(srv.URL)
+		o, err := tests.GetMetrics(srv.URL)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		// Count the no. of requests made to the first ID.
-		idCount := map[string]int{}
-		for x := 0; x < len(ids); x++ {
-			if _, ok := idCount[ids[0]]; !ok {
-				idCount[ids[x]] = 0
-			}
-			idCount[ids[x]]++
+		req := o["http_requests_duration_milliseconds"]
+		var count uint64
+		for _, m := range req.Metric {
+			count += m.GetHistogram().GetSampleCount()
 		}
 
-		assert.Equal(t, len(idCount), len(o["http_requests_total"].GetMetric()))
-		assert.Equal(t, o["http_requests_duration"].GetType(), dto.MetricType_HISTOGRAM)
-		assert.Equal(t, 4, assertLabels("/api", getDomain(srv), o["http_requests_duration"]))
+		assert.Equal(t, len(ids), int(count))
+		assert.Equal(t, req.GetType(), dto.MetricType_HISTOGRAM)
+		assert.Equal(t, 6, assertLabels("/api", getDomain(srv), req))
 	})
 
 	t.Run("wrapped mux captures pattern", func(t *testing.T) {
 		resetMetrics()
 		mux := http.NewServeMux()
 		mux.Handle("/api/", basicHandler())
-		srv := makeServer(Last9HttpHandler(bindMetrics(mux)))
+		srv := tests.MakeServer(REDHandler(bindMetrics(mux)))
 		defer srv.Close()
 
-		if _, err := sendTestRequests(srv.URL, 10); err != nil {
+		if _, err := tests.SendTestRequests(srv.URL, 10); err != nil {
 			t.Fatal(err)
 		}
 
-		o, err := getMetrics(srv.URL)
+		o, err := tests.GetMetrics(srv.URL)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		assert.Equal(t, o["http_requests_duration"].GetType(), dto.MetricType_HISTOGRAM)
-		assert.Equal(t, 4, assertLabels("/api", getDomain(srv), o["http_requests_duration"]))
-		assert.Equal(t, 5, assertLabels("/api/", getDomain(srv), o["http_requests_duration"]))
-		assert.Equal(t, *(o["http_requests_total"].GetMetric()[0].Counter.Value), 10.0)
+		req := o["http_requests_duration_milliseconds"]
+
+		assert.Equal(t, req.GetType(), dto.MetricType_HISTOGRAM)
+		assert.Equal(t, 6, assertLabels("/api", getDomain(srv), req))
+		assert.Equal(t, 7, assertLabels("/api/", getDomain(srv), req))
+		var count uint64
+		for _, m := range req.Metric {
+			count += m.GetHistogram().GetSampleCount()
+		}
+		assert.Equal(t, 10, int(count))
 	})
 
 	t.Run("wrapped mux with custom grouper", func(t *testing.T) {
 		resetMetrics()
 		mux := http.NewServeMux()
-		mux.Handle("/api/", Last9HttpPatternHandler(
-			func(r *http.Request, mux http.Handler) string {
-				return "my_custom_path_static"
+		mux.Handle("/api/", CustomREDHandler(
+			func(r *http.Request, mux http.Handler) map[string]string {
+				return map[string]string{
+					labelPer: "my_custom_path_static",
+				}
 			},
 			basicHandler(),
 		))
 
-		srv := makeServer(bindMetrics(mux))
+		srv := tests.MakeServer(bindMetrics(mux))
 		defer srv.Close()
 
-		if _, err := sendTestRequests(srv.URL, 10); err != nil {
+		if _, err := tests.SendTestRequests(srv.URL, 10); err != nil {
 			t.Fatal(err)
 		}
 
-		o, err := getMetrics(srv.URL)
+		o, err := tests.GetMetrics(srv.URL)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		assert.Equal(t, o["http_requests_duration"].GetType(), dto.MetricType_HISTOGRAM)
-		assert.Equal(t, 4, assertLabels("/api", getDomain(srv), o["http_requests_duration"]))
-		assert.Equal(t, 5, assertLabels("my_custom_path_static", getDomain(srv), o["http_requests_duration"]))
-		assert.Equal(t, *(o["http_requests_total"].GetMetric()[0].Counter.Value), 10.0)
+		req := o["http_requests_duration_milliseconds"]
+		assert.Equal(t, req.GetType(), dto.MetricType_HISTOGRAM)
+		assert.Equal(t, 6, assertLabels("/api", getDomain(srv), req))
+		assert.Equal(t, 7, assertLabels("my_custom_path_static", getDomain(srv), req))
+		var count uint64
+		for _, m := range req.Metric {
+			count += m.GetHistogram().GetSampleCount()
+		}
+		assert.Equal(t, 10, int(count))
 	})
 }
