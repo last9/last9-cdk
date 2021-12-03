@@ -15,6 +15,7 @@ var (
 	hostOnce sync.Once
 )
 
+// GetHostname runs and saves a hostname, once
 func GetHostname() string {
 	hostOnce.Do(func() {
 		x, err := os.Hostname()

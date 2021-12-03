@@ -1,9 +1,10 @@
-name: Golang HTTP Metrics CDK
+name: Golang CDK
 on:
   push:
     paths:
-      - 'golang/httpmetrics/**'
-      - '.github/workflows/golang_httpmetrics.yml'
+      - 'go/**'
+      - 'go/**/**'
+      - '.github/workflows/go.yml'
 
 jobs:
   Test:
@@ -17,5 +18,5 @@ jobs:
     - name: Checkout Repo
       uses: actions/checkout@v1
 
-    - name: Test
-      run: cd golang/httpmetrics; go mod tidy; go test -v ./...
+    - name: Tests
+      run: make test
