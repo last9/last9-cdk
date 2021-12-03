@@ -1,0 +1,26 @@
+version: '3.0'
+
+services:
+  pg13:
+    image: postgres:13
+    restart: always
+    ports:
+      - 8432:5432/tcp
+    environment:
+      POSTGRES_DB: last9
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    tmpfs:
+      - /run
+      - /tmp
+      - /var/lock
+      - /var/tmp
+      - /var/log
+      - /var/cache
+
+  wait_postgres:
+    image: "waisbrot/wait"
+    depends_on:
+      - pg13
+    environment:
+      TARGETS: pg13:8432
