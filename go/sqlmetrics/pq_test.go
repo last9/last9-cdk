@@ -55,7 +55,7 @@ func TestPq(t *testing.T) {
 	t.Run("register cannot return error", func(t *testing.T) {
 		// NOTE: This is the first change that you do.
 		// Declare the driver that you would want to use.
-		name, err := RegisterDriver("postgres")
+		name, err := RegisterDriver(Options{Driver: "postgres"})
 		if err != nil {
 			t.Fatal(err)
 		}

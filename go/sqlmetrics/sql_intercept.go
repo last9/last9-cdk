@@ -59,7 +59,29 @@ func getQueryStatus(err error) queryStatus {
 	return success
 }
 
-func RegisterDriver(d string) (string, error) {
+// Options to be passed while registering.
+// Currently only Override is supported. Override must be passed as true
+// when you have no control over sql.Open( and cannot alter that code
+// to use sql.Open("<driver>:last9", dsn) but still want it to be observable
+// In such cases, if the library (outside your control) was using the driver
+// name as sql.Open(<driver>, dsn) then this struct would be
+// Options{Driver: <driver>, Override: true}
+type Options struct {
+	Driver   string
+	Override bool
+}
+
+// DriverName returns the original or the suffixed driverName based on the
+// override
+func (r Options) DriverName() string {
+	if r.Override {
+		return r.Driver
+	}
+
+	return driverName(r.Driver)
+}
+
+func RegisterDriver(d Options) (string, error) {
 	return RegisterDriverWithLabelMaker(d, defaultLabelMaker)
 }
 
@@ -67,26 +89,26 @@ func RegisterDriver(d string) (string, error) {
 // But since the method could be called from goroutines, it will need some
 // sync mechanics. But until we get to that, we can just skip it until then.
 
-func RegisterDriverWithLabelMaker(d string, fn LabelMaker) (string, error) {
+func RegisterDriverWithLabelMaker(d Options, fn LabelMaker) (string, error) {
 	// If this is an already registered driver, don't do anything.
 	// SQL will take care of the registered driver for that database.
 	if x, ok := enabled.Load(d); ok {
 		return x.(string), nil
 	}
 
-	if !isDriverEnabled(d) {
+	if !isDriverEnabled(d.Driver) {
 		return "", errors.Errorf("%v has not been activated. Import it please", d)
 	}
 
 	// Just perform a blank open to extract the Driver() out of it.
 	// Since the DSN is empty, this is a harmless operation and does not
 	// leave behind an actual open connection.
-	db, err := sql.Open(d, "")
+	db, err := sql.Open(d.Driver, "")
 	if err != nil {
-		return "", errors.Wrapf(err, "init %v", d)
+		return "", errors.Wrapf(err, "init %v", d.Driver)
 	}
 
-	name := driverName(d)
+	name := d.DriverName()
 
 	sql.Register(name, proxy.NewProxyContext(
 		//&wrapDriver{original: db.Driver()},
@@ -176,6 +198,6 @@ func RegisterDriverWithLabelMaker(d string, fn LabelMaker) (string, error) {
 	))
 
 	// mark this driver as enabled.
-	enabled.Store(d, name)
+	enabled.Store(d.Driver, name)
 	return name, nil
 }
