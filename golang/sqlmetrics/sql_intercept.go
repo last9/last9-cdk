@@ -59,15 +59,15 @@ func getQueryStatus(err error) queryStatus {
 	return success
 }
 
-func RegisterDB(d string) (string, error) {
-	return RegisterDBWithLabelMaker(d, defaultLabelMaker)
+func RegisterDriver(d string) (string, error) {
+	return RegisterDriverWithLabelMaker(d, defaultLabelMaker)
 }
 
 // TODO Implement an Unregister as well. Since the fn will be locked forever
 // But since the method could be called from goroutines, it will need some
 // sync mechanics. But until we get to that, we can just skip it until then.
 
-func RegisterDBWithLabelMaker(d string, fn LabelMaker) (string, error) {
+func RegisterDriverWithLabelMaker(d string, fn LabelMaker) (string, error) {
 	// If this is an already registered driver, don't do anything.
 	// SQL will take care of the registered driver for that database.
 	if x, ok := enabled.Load(d); ok {

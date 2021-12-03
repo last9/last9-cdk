@@ -24,14 +24,16 @@ func (l LabelSet) ToMap() map[string]string {
 // or more relevant labels out of it.
 type LabelMaker func(string) LabelSet
 
+const idealLabelLen = 20
+
 // The default labelSet to be exported is just a query, that too trimmed down
 // to 140 charachters only. Queries can be large and can really bring down
 // the metric server to its knees if left untapped. If this behaviour is not
 // desired, a user can anwyay implement their own QToLabelSet and emit the
 // raw query as-it-is.
 func defaultLabelMaker(q string) LabelSet {
-	if len(q) > 140 {
-		q = q[:140] + "..."
+	if len(q) > idealLabelLen {
+		q = q[:idealLabelLen] + "..."
 	}
 
 	return LabelSet{"per": q}

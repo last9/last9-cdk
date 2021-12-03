@@ -3,7 +3,6 @@ package sqlmetrics
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"log"
 	"net/http"
 	"os"
@@ -18,12 +17,20 @@ import (
 	"gotest.tools/assert"
 )
 
-func getDB() (*sql.DB, error) {
+func getDSN() string {
 	dsn := os.Getenv("LAST9_SQL_DSN")
 	if dsn == "" {
-		return nil, errors.New("LAST9_SQL_DSN is not set")
+		panic("LAST9_SQL_DSN is not set")
 	}
 
+	return dsn
+}
+
+func getDB() (*sql.DB, error) {
+	dsn := getDSN()
+	// NOTE: This is the Second change that you make.
+	// whatever the regsitered driver was, use <driver>:last9 to connect
+	// instead of <driver>. And that's it.
 	return sql.Open("postgres:last9", dsn)
 }
 
@@ -46,7 +53,9 @@ func TestPq(t *testing.T) {
 	defer srv.Close()
 
 	t.Run("register cannot return error", func(t *testing.T) {
-		name, err := RegisterDB("postgres")
+		// NOTE: This is the first change that you do.
+		// Declare the driver that you would want to use.
+		name, err := RegisterDriver("postgres")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -111,6 +120,47 @@ func TestPq(t *testing.T) {
 		assert.Equal(t, nil, rows.Close())
 	})
 
+	t.Run("conn metrics", func(t *testing.T) {
+		dsn := getDSN()
+		labels, err := makeStatsLabels(dsn)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		db, err := getDB()
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer db.Close()
+
+		emitStats(db.Stats(), labels)
+
+		o, err := tests.GetMetrics(srv.URL)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		idle, ok := o["last9_sql_connections_idle"]
+		assert.Equal(t, true, ok)
+		assert.Equal(t, idle.GetType(), dto.MetricType_GAUGE)
+
+		used, ok := o["last9_sql_connections_in_use"]
+		assert.Equal(t, true, ok)
+		assert.Equal(t, used.GetType(), dto.MetricType_GAUGE)
+
+		max, ok := o["last9_sql_connections_max_open"]
+		assert.Equal(t, true, ok)
+		assert.Equal(t, max.GetType(), dto.MetricType_GAUGE)
+
+		wait_duration, ok := o["last9_sql_connections_wait_duration_total"]
+		assert.Equal(t, true, ok)
+		assert.Equal(t, wait_duration.GetType(), dto.MetricType_COUNTER)
+
+		wait_total, ok := o["last9_sql_connections_wait_total"]
+		assert.Equal(t, true, ok)
+		assert.Equal(t, wait_total.GetType(), dto.MetricType_COUNTER)
+	})
+
 	t.Run("create and execute", func(t *testing.T) {
 		resetMetrics()
 
@@ -127,13 +177,18 @@ func TestPq(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if _, err := tx.ExecContext(ctx, `CREATE TEMPORARY TABLE pets (id SERIAL PRIMARY KEY,name TEXT,species TEXT)`); err != nil {
+		if _, err := tx.ExecContext(ctx, `CREATE TEMPORARY TABLE
+		pets (id SERIAL PRIMARY KEY,name TEXT,species TEXT)
+		`); err != nil {
 			t.Fatal(err)
 		}
 
-		// Here, the query is executed on the transaction instance, and not applied to the database yet
-		if _, err = tx.ExecContext(ctx, "INSERT INTO pets (name, species) VALUES ('Fido', 'dog'), ('Albert', 'cat')"); err != nil {
-			// Incase we find any error in the query execution, rollback the transaction
+		// Here, the query is executed on the transaction instance, and
+		// not applied to the database yet
+		if _, err = tx.ExecContext(ctx, `INSERT INTO pets (name, species)
+		VALUES ('Fido', 'dog'), ('Albert', 'cat')
+		`); err != nil {
+			// Incase we find any error in the query execution, rollback
 			tx.Rollback()
 			return
 		}
@@ -166,7 +221,6 @@ func TestPq(t *testing.T) {
 		assert.Equal(t, req.GetType(), dto.MetricType_HISTOGRAM)
 		for _, m := range req.GetMetric() {
 			h := m.GetHistogram()
-			log.Println(m.GetLabel())
 			assert.Equal(t, 1, int(h.GetSampleCount()))
 			assert.Equal(t, true, labelSetContains(
 				m.GetLabel(), map[string]string{
