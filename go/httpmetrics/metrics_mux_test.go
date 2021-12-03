@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/last9-cdk/tests"
+	"github.com/last9/last9-cdk/go/tests"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	dto "github.com/prometheus/client_model/go"
 	"gopkg.in/go-playground/assert.v1"

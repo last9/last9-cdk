@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/last9-cdk/proc"
-	"github.com/last9-cdk/tests"
+	"github.com/last9/last9-cdk/go/proc"
+	"github.com/last9/last9-cdk/go/tests"
 	dto "github.com/prometheus/client_model/go"
 )
 

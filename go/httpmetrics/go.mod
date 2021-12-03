@@ -1,11 +1,11 @@
-module github.com/last9-go-cdk/httpmetrics
+module github.com/last9/last9-cdk/go/httpmetrics
 
 go 1.17
 
 require (
 	github.com/gorilla/mux v1.8.0
-	github.com/last9-cdk/proc v0.0.0-00010101000000-000000000000
-	github.com/last9-cdk/tests v0.0.0-00010101000000-000000000000
+	github.com/last9/last9-cdk/go/proc v0.0.0-00010101000000-000000000000
+	github.com/last9/last9-cdk/go/tests v0.0.0-00010101000000-000000000000
 	github.com/last9/pat v0.0.0-20211111093525-daacb495b5a9
 	github.com/prometheus/client_golang v1.11.0
 	github.com/prometheus/client_model v0.2.0
@@ -24,6 +24,6 @@ require (
 	google.golang.org/protobuf v1.26.0-rc.1 // indirect
 )
 
-replace github.com/last9-cdk/proc => ../proc
+replace github.com/last9/last9-cdk/go/proc => ../proc
 
-replace github.com/last9-cdk/tests => ../tests
+replace github.com/last9/last9-cdk/go/tests => ../tests

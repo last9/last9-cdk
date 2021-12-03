@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
-	"github.com/last9-cdk/tests"
+	"github.com/last9/last9-cdk/go/tests"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"gopkg.in/go-playground/assert.v1"
 )
