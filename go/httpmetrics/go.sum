@@ -138,6 +138,10 @@ github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515/go.mod h1:+0opPa2QZZtGFB
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
+github.com/last9/last9-cdk/go/proc v0.0.0-20211204080217-d07e884bca8f h1:/QkRo4RInuz6PocSvsR8SNBfJO+BkPK9agjbKPqkKt4=
+github.com/last9/last9-cdk/go/proc v0.0.0-20211204080217-d07e884bca8f/go.mod h1:v6CMOSapiBY2xUeeFNsQ0sc2CuxMwlh6MFr7OVyGlpg=
+github.com/last9/last9-cdk/go/tests v0.0.0-20211204081413-1c14e9b7f907 h1:SsmtS2RTKvTtwch2GEON39WjhbPuecuPMinIrr2gv0E=
+github.com/last9/last9-cdk/go/tests v0.0.0-20211204081413-1c14e9b7f907/go.mod h1:a9XolYOH4jXYBdffDh35MwgCecDG5BSk36vYR/X6es4=
 github.com/last9/pat v0.0.0-20211111093525-daacb495b5a9 h1:TNkDVkCwyqCOEEBGa4DZ4P5VytFEKf3asj1fPUX3j4Y=
 github.com/last9/pat v0.0.0-20211111093525-daacb495b5a9/go.mod h1:vv6bMbr18jLlvSSVHKun9L4j3RedkLhpaQcZB4+byx0=
 github.com/matttproud/golang_protobuf_extensions v1.0.1 h1:4hp9jkHxhMHkqkrB3Ix0jegS5sx/RkqARlsWZ6pIwiU=
