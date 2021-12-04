@@ -3,8 +3,8 @@ module github.com/last9/last9-cdk/go/sqlmetrics
 go 1.17
 
 require (
-	github.com/last9/last9-cdk/go/proc v0.0.0-00010101000000-000000000000
-	github.com/last9/last9-cdk/go/tests v0.0.0-00010101000000-000000000000
+	github.com/last9/last9-cdk/go/proc v0.0.0-20211204081638-2f06c5135fa9
+	github.com/last9/last9-cdk/go/tests v0.0.0-20211204081638-2f06c5135fa9
 	github.com/lib/pq v1.10.4
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.11.0
@@ -25,7 +25,3 @@ require (
 	golang.org/x/sys v0.0.0-20210603081109-ebe580a85c40 // indirect
 	google.golang.org/protobuf v1.26.0-rc.1 // indirect
 )
-
-replace github.com/last9/last9-cdk/go/proc => ../proc
-
-replace github.com/last9/last9-cdk/go/tests => ../tests
