@@ -1,4 +1,4 @@
-module github.com/last9-go-cdk/tests
+module github.com/last9/last9-cdk/go/tests
 
 go 1.17
 
