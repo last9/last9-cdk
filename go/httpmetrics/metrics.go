@@ -71,6 +71,8 @@ func (rw *responseWriter) Write(data []byte) (int, error) {
 	// rw.w.WriteHeader(rw.code)
 	if rw.code >= http.StatusInternalServerError {
 		rw.resp = data
+	} else if rw.code == 0 {
+		rw.code = http.StatusOK
 	}
 
 	return rw.w.Write(data)

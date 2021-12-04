@@ -1,4 +1,4 @@
-module github.com/last9-go-cdk/proc
+module github.com/last9/last9-cdk/go/proc
 
 go 1.17
 
