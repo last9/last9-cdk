@@ -12,12 +12,16 @@ import (
 )
 
 func patHandler() http.HandlerFunc {
-	return http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(r.URL.Query().Get(":id")))
-		},
-	)
+		}
+}
+
+func patHandlerNoWriteHeader() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte(r.URL.Query().Get(":id")))
+		}
 }
 
 func TestPatMux(t *testing.T) {
@@ -158,5 +162,31 @@ func TestPatMux(t *testing.T) {
 				}
 			}
 		}
+	})
+
+	t.Run("status should != 0 even if WriteHeader is not called explicitly", func(t *testing.T){
+		resetMetrics()
+
+		m := pat.New()
+		m.Get("/api/:id", REDHandler(patHandlerNoWriteHeader()))
+		m.Get("/metrics", promhttp.Handler())
+		m.Use(REDHandler)
+		srv := tests.MakeServer(REDHandler(m))
+		defer srv.Close()
+
+		ids, err := tests.SendTestRequests(srv.URL, 2)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		o, err := tests.GetMetrics(srv.URL)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		req := o["http_requests_duration_milliseconds"]
+		assert.Equal(t, len(ids) > 0, true)
+		assert.Equal(t, 1, len(req.GetMetric()))
+		assert.Equal(t, 7, assertLabels("/api/:id", getDomain(srv), req))
 	})
 }

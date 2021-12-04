@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/last9-cdk/proc"
+	"github.com/last9/last9-cdk/go/proc"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 )
