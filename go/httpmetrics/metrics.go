@@ -62,6 +62,13 @@ func (rw *ResponseWriter) Header() http.Header {
 	return rw.w.Header()
 }
 
+// Code returns the statusCode on the way out. Do note that if this code is
+// 0 that means that the Write was not called yet. It will be a non-zero
+// status only once the Write has been called.
+func (rw *ResponseWriter) Code() int {
+	return rw.code
+}
+
 func (rw *ResponseWriter) WriteHeader(statusCode int) {
 	rw.code = statusCode
 	rw.w.WriteHeader(statusCode)
