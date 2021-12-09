@@ -205,8 +205,8 @@ func TestPq(t *testing.T) {
 
 		assert.Equal(t, 1, catCount)
 
-		// Finally, if no errors are recieved from the queries, commit the transaction
-		// this applies the above changes to our database
+		// Finally, if no errors are recieved from the queries,
+		// commit the transaction this applies the above changes to our database
 		if err = tx.Commit(); err != nil {
 			tx.Rollback()
 			t.Fatal(err)

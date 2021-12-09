@@ -112,7 +112,8 @@ func TestMux(t *testing.T) {
 		req := o["http_requests_duration_milliseconds"]
 		assert.Equal(t, req.GetType(), dto.MetricType_HISTOGRAM)
 		assert.Equal(t, 6, assertLabels("/api", getDomain(srv), req))
-		assert.Equal(t, 7, assertLabels("my_custom_path_static", getDomain(srv), req))
+		assert.Equal(t, 7,
+			assertLabels("my_custom_path_static", getDomain(srv), req))
 		var count uint64
 		for _, m := range req.Metric {
 			count += m.GetHistogram().GetSampleCount()

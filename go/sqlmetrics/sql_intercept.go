@@ -97,7 +97,8 @@ func RegisterDriverWithLabelMaker(d Options, fn LabelMaker) (string, error) {
 	}
 
 	if !isDriverEnabled(d.Driver) {
-		return "", errors.Errorf("%v has not been activated. Import it please", d)
+		return "", errors.Errorf(
+			"%v has not been activated. Import it please", d)
 	}
 
 	// Just perform a blank open to extract the Driver() out of it.
@@ -144,7 +145,8 @@ func RegisterDriverWithLabelMaker(d Options, fn LabelMaker) (string, error) {
 				dc := ctx.(*dbCtx)
 
 				if err := emitDuration(
-					fn(dc.query).Merge(info.LabelSet()), getQueryStatus(err), dc.start,
+					fn(dc.query).Merge(
+						info.LabelSet()), getQueryStatus(err), dc.start,
 				); err != nil {
 					log.Printf("%+v", err)
 				}
@@ -169,7 +171,8 @@ func RegisterDriverWithLabelMaker(d Options, fn LabelMaker) (string, error) {
 				dc := ctx.(*dbCtx)
 
 				if err := emitDuration(
-					fn(dc.query).Merge(info.LabelSet()), getQueryStatus(err), dc.start,
+					fn(dc.query).Merge(
+						info.LabelSet()), getQueryStatus(err), dc.start,
 				); err != nil {
 					log.Printf("%+v", err)
 				}

@@ -17,7 +17,8 @@ func printContextInternals(ctx interface{}, inner bool) {
 	if contextKeys.Kind() == reflect.Struct {
 		for i := 0; i < contextValues.NumField(); i++ {
 			reflectValue := contextValues.Field(i)
-			reflectValue = reflect.NewAt(reflectValue.Type(), unsafe.Pointer(reflectValue.UnsafeAddr())).Elem()
+			reflectValue = reflect.NewAt(reflectValue.Type(),
+				unsafe.Pointer(reflectValue.UnsafeAddr())).Elem()
 
 			reflectField := contextKeys.Field(i)
 

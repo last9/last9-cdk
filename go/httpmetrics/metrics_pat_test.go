@@ -13,15 +13,15 @@ import (
 
 func patHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(r.URL.Query().Get(":id")))
-		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(r.URL.Query().Get(":id")))
+	}
 }
 
 func patHandlerNoWriteHeader() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte(r.URL.Query().Get(":id")))
-		}
+		w.Write([]byte(r.URL.Query().Get(":id")))
+	}
 }
 
 func TestPatMux(t *testing.T) {
@@ -47,7 +47,8 @@ func TestPatMux(t *testing.T) {
 		req := o["http_requests_duration_milliseconds"]
 		assert.Equal(t, len(ids) > 0, true)
 		assert.Equal(t, 1, len(req.GetMetric()))
-		assert.Equal(t, 7, assertLabels("/api/:id", getDomain(srv), req))
+		assert.Equal(t, 7,
+			assertLabels("/api/:id", getDomain(srv), req))
 	})
 
 	t.Run("wrapped pat mux captures path", func(t *testing.T) {
@@ -72,7 +73,8 @@ func TestPatMux(t *testing.T) {
 		req := o["http_requests_duration_milliseconds"]
 		assert.Equal(t, len(ids) > 0, true)
 		assert.Equal(t, 1, len(req.GetMetric()))
-		assert.Equal(t, 7, assertLabels("/api/:id", getDomain(srv), req))
+		assert.Equal(t, 7,
+			assertLabels("/api/:id", getDomain(srv), req))
 	})
 
 	t.Run("pat mux uses middleware", func(t *testing.T) {
@@ -98,7 +100,8 @@ func TestPatMux(t *testing.T) {
 		req := o["http_requests_duration_milliseconds"]
 		assert.Equal(t, len(ids) > 0, true)
 		assert.Equal(t, 1, len(req.GetMetric()))
-		assert.Equal(t, 7, assertLabels("/api/:id", getDomain(srv), req))
+		assert.Equal(t, 7,
+			assertLabels("/api/:id", getDomain(srv), req))
 	})
 
 	t.Run("pat mux uses reudundant middlewares", func(t *testing.T) {
@@ -124,7 +127,8 @@ func TestPatMux(t *testing.T) {
 		req := o["http_requests_duration_milliseconds"]
 		assert.Equal(t, len(ids) > 0, true)
 		assert.Equal(t, 1, len(req.GetMetric()))
-		assert.Equal(t, 7, assertLabels("/api/:id", getDomain(srv), req))
+		assert.Equal(t, 7,
+			assertLabels("/api/:id", getDomain(srv), req))
 	})
 
 	t.Run("pat custom label middlewares", func(t *testing.T) {
@@ -164,7 +168,8 @@ func TestPatMux(t *testing.T) {
 		}
 	})
 
-	t.Run("status should != 0 even if WriteHeader is not called explicitly", func(t *testing.T){
+	t.Run("status should != 0 even if WriteHeader"+
+		"is not called explicitly", func(t *testing.T) {
 		resetMetrics()
 
 		m := pat.New()
@@ -187,6 +192,7 @@ func TestPatMux(t *testing.T) {
 		req := o["http_requests_duration_milliseconds"]
 		assert.Equal(t, len(ids) > 0, true)
 		assert.Equal(t, 1, len(req.GetMetric()))
-		assert.Equal(t, 7, assertLabels("/api/:id", getDomain(srv), req))
+		assert.Equal(t, 7,
+			assertLabels("/api/:id", getDomain(srv), req))
 	})
 }
