@@ -2,6 +2,7 @@ package httpmetrics
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -112,6 +113,12 @@ func middlewarePreEnabled(r *http.Request) bool {
 // How to use?
 // mux.Handle("/api/", CustomREDHandler(labelMaker, basicHandler()))
 func CustomREDHandler(g LabelMaker, next http.Handler) http.Handler {
+	// the custom label maker (g) might not return all the labels that our
+	// default label maker (figureOutLabelMaker) does, to handle this, we need to call the default but only if g
+	// itself is not the default. So to ensure that, we need to compare g with default, there might be a better way
+	// to compare two funcs, please raise a PR if you find one.
+	isCustomLabelMaker := fmt.Sprintf("%v", g) != fmt.Sprintf("%v", LabelMaker(figureOutLabelMaker))
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rw := &responseWriter{w: w}
 
@@ -156,6 +163,14 @@ func CustomREDHandler(g LabelMaker, next http.Handler) http.Handler {
 
 			// Status code can only be known AFTER the mux was invoked.
 			labels[labelStatus] = strconv.Itoa(rw.code)
+
+			if isCustomLabelMaker {
+				for k, v := range figureOutLabelMaker(r, next) {
+					if _, ok := labels[k]; !ok {
+						labels[k] = v
+					}
+				}
+			}
 
 			httpRequestsDuration.With(labels).Observe(
 				float64(time.Since(start).Milliseconds()),
