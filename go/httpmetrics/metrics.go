@@ -48,47 +48,6 @@ func init() {
 	prometheus.MustRegister(httpRequestsDuration)
 }
 
-// ResponseWriter is a status hijacker since http.ResponseWriter is an
-// interface and unlike http.Request it cannot expose the value of the status
-// once previously set during the lifetime of a handler.
-// We rely on the status code to be emitted as one of the labels.
-type ResponseWriter struct {
-	w    http.ResponseWriter
-	resp []byte
-	code int
-}
-
-func (rw *ResponseWriter) Header() http.Header {
-	return rw.w.Header()
-}
-
-// Code returns the statusCode on the way out. Do note that if this code is
-// 0 that means that the Write was not called yet. It will be a non-zero
-// status only once the Write has been called.
-func (rw *ResponseWriter) Code() int {
-	return rw.code
-}
-
-func (rw *ResponseWriter) WriteHeader(statusCode int) {
-	rw.code = statusCode
-	rw.w.WriteHeader(statusCode)
-}
-
-func (rw *ResponseWriter) Write(data []byte) (int, error) {
-	// rw.w.WriteHeader(rw.code)
-	if rw.code >= http.StatusInternalServerError {
-		rw.resp = data
-	} else if rw.code == 0 {
-		rw.code = http.StatusOK
-	}
-
-	return rw.w.Write(data)
-}
-
-func (rw *ResponseWriter) CloseNotify() <-chan bool {
-	return rw.w.(http.CloseNotifier).CloseNotify()
-}
-
 type last9Ctx string
 
 // middlewarePreEnabled looks for context key to rule out if the middleware
@@ -120,7 +79,8 @@ func middlewarePreEnabled(r *http.Request) bool {
 // mux.Handle("/api/", CustomREDHandler(labelMaker, basicHandler()))
 func CustomREDHandler(g LabelMaker, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		rw := &ResponseWriter{w: w}
+		rw := NewResponseWriter(w)
+		defer FinishResponseWriter(rw)
 
 		// If the middleware was already executed, skip this.
 		// read the function definition for scenarios where this is applicable.
