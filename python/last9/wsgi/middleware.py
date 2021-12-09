@@ -15,19 +15,16 @@ from prometheus_client import generate_latest
 def get_program():
     return os.path.basename(sys.argv[0])
 
+
 def get_hostname():
     return socket.gethostname()
 
 
-http_requests_total = Counter(
-        "http_requests_total", "Total HTTP requests per path",
+http_requests_duration = Histogram(
+        "http_requests_duration_milliseconds", "HTTP requests duration per path",
         ["per", "hostname", "domain", "method", "program", "status"]
         )
 
-http_requests_duration = Histogram(
-        "http_requests_duration", "HTTP requests duration per path",
-        ["per", "hostname", "domain", "method", "program", "status"]
-        )
 
 def teardown_request_func(error=None):
     """
@@ -41,7 +38,10 @@ def teardown_request_func(error=None):
 
     In absence of this, the emitter will fallback to per-request URI metrics.
     """
-    request.environ["last9_route"] = request.url_rule.rule
+    try:
+        request.environ["last9_route"] = request.url_rule.rule
+    except AttributeError:
+        request.environ["last9_route"] = "/unmatched"
 
 
 def timed_function(fn):
@@ -60,9 +60,10 @@ def timed_function(fn):
         finally:
             end = default_timer()
 
-        return (response, (end-start))
+        return response, (end-start)
 
     return inner
+
 
 class WsgiMiddleware(object):
     def __init__(self, app, grouper=None, hostname=None, program=None):
@@ -71,18 +72,18 @@ class WsgiMiddleware(object):
         self.hostname = hostname or get_hostname()
         self.program = program or get_program()
 
-    def metric_labels(self, request, response):
+    def metric_labels(self, req, response):
         return {
-                "per": self.grouper(request),
+                "per": self.grouper(req),
                 "hostname": self.hostname,
                 "program": self.program,
                 "status": response.status_code,
-                "domain": request.environ.get("HTTP_HOST"),
-                "method": request.environ.get("REQUEST_METHOD")
+                "domain": req.environ.get("HTTP_HOST"),
+                "method": req.environ.get("REQUEST_METHOD")
                 }
 
     def __call__(self, environ, start_response):
-        request = Request(environ)
+        req = Request(environ)
 
         # decorate the self.app with a timed_function
         # the assumption that response may be null needs to be handled.
@@ -91,9 +92,7 @@ class WsgiMiddleware(object):
         response, duration = fn(environ, start_response)
 
         # Observe the metrics
-        labels = self.metric_labels(request, Response(environ))
-        # Incrrment the request counter
-        http_requests_total.labels(**labels).inc()
+        labels = self.metric_labels(req, Response(environ))
         # Observe the latency in a bucket
         http_requests_duration.labels(**labels).observe(duration*1000)
 
@@ -116,28 +115,31 @@ class FlaskMiddleware(WsgiMiddleware):
         # Bind the route to serve metrics
         app.route("/metrics")(self.serve_metrics)
 
-def per_rule(request):
+
+def per_rule(req):
     return (
-            request.environ.get("last9_route") or ""
+            req.environ.get("last9_route") or ""
             ).replace("<", "{").replace(">", "}")
 
-def per_path(request):
-    return request.environ.get("PATH_INFO")
+
+def per_path(req):
+    return req.environ.get("PATH_INFO")
+
 
 class RedMiddleware(object):
-    '''
+    """
     RED Middleware
-    '''
+    """
+
     def __new__(self, app, grouper=None, *a, **kw):
         if isinstance(app, Flask):
             return FlaskMiddleware(app, grouper,
-                    hostname=kw.get("hostname"),
-                    program=kw.get("program"))
+                                   hostname=kw.get("hostname"),
+                                   program=kw.get("program"))
 
         elif callable(app):
             return WsgiMiddleware(app, grouper,
-                    hostname=kw.get("hostname"),
-                    program=kw.get("program"))
+                                  hostname=kw.get("hostname"),
+                                  program=kw.get("program"))
 
         raise Exception("Unsupported type")
-
