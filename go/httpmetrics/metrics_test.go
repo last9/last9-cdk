@@ -24,8 +24,8 @@ func getDomain(s *httptest.Server) string {
 // Example:
 // given http requests that may or may not use a pattern identifier, the rest
 // of the fields do not change in the metric.
-// So a request to /api/1
-// will yield http_requests_total{program=,hostname=,status=,per=[either /api/1 or /api/:id}
+// So a request to /api/1 will yield
+// http_requests{program=,hostname=,status=,per=[either /api/1 or /api/:id}
 // where program hostname and status won't change.
 func assertLabels(per string, domain string, m *dto.MetricFamily) int {
 	success := 0

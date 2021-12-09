@@ -7,7 +7,9 @@ import (
 // labelSetContains scans for labels and a map of expected values;
 // returning true IF all of the expected keys and alues are present in labels.
 // returning false for all other cases.
-func labelSetContains(labels []*dto.LabelPair, expected map[string]string) bool {
+func labelSetContains(
+	labels []*dto.LabelPair, expected map[string]string,
+) bool {
 	for k, v := range expected {
 		var found bool
 		for _, l := range labels {

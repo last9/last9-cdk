@@ -23,8 +23,8 @@ const (
 var (
 	// defaultLabels that are provided to the Request metric.
 	defaultLabels = []string{
-		labelPer, proc.LabelHostname, labelDomain, labelMethod, proc.LabelProgram,
-		labelStatus, proc.LabelTenant, proc.LabelCluster,
+		labelPer, proc.LabelHostname, labelDomain, labelMethod,
+		proc.LabelProgram, labelStatus, proc.LabelTenant, proc.LabelCluster,
 	}
 
 	// the ONLY metric that we emit is httpRequestsDuration
@@ -114,10 +114,12 @@ func middlewarePreEnabled(r *http.Request) bool {
 // mux.Handle("/api/", CustomREDHandler(labelMaker, basicHandler()))
 func CustomREDHandler(g LabelMaker, next http.Handler) http.Handler {
 	// the custom label maker (g) might not return all the labels that our
-	// default label maker (figureOutLabelMaker) does, to handle this, we need to call the default but only if g
-	// itself is not the default. So to ensure that, we need to compare g with default, there might be a better way
-	// to compare two funcs, please raise a PR if you find one.
-	isCustomLabelMaker := fmt.Sprintf("%v", g) != fmt.Sprintf("%v", LabelMaker(figureOutLabelMaker))
+	// default label maker (figureOutLabelMaker) does, to handle this, we need
+	// to call the default but only if g itself is not the default.
+	// So to ensure that, we need to compare g with default, there might be a
+	// better way to compare two funcs, please raise a PR if you find one.
+	isCustomLabelMaker := fmt.Sprintf("%v", g) !=
+		fmt.Sprintf("%v", LabelMaker(figureOutLabelMaker))
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rw := &responseWriter{w: w}
@@ -144,15 +146,15 @@ func CustomREDHandler(g LabelMaker, next http.Handler) http.Handler {
 
 		defer func() {
 			// Status code and path can only be known AFTER the mux was invoked.
-			// Some of the middleware alter the request BUT they create a new
-			// request with context so the original request is untampered.
-			// Hence delay this as late as possible to get the freshest/latest
+			// Some middlewares alter the request BUT they create a new
+			// request with context so the original request is untempered.
+			// So, delay this as late as possible to get the freshest/latest
 			// value of the parameters.
 			for k, v := range g(r, next) {
 				// run through the defaultLabels and attempt to set, ONLY if
 				// its an expected labelKey. An attempt to set something else
-				// results in prometheus client library panicking, and that would
-				// mean NO metric.
+				// results in prometheus client library panic, and that would
+				// yield NO metrics.
 				for _, l := range defaultLabels {
 					if k == l {
 						labels[k] = v
