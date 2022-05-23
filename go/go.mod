@@ -20,6 +20,7 @@ require (
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
+	github.com/go-chi/chi/v5 v5.0.7 // indirect
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/google/go-cmp v0.5.5 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
