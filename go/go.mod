@@ -1,8 +1,9 @@
-module github.com/last9/last9-cdk/go/v1
+module github.com/last9/last9-cdk/go
 
 go 1.17
 
 require (
+	github.com/go-chi/chi/v5 v5.0.7
 	github.com/gorilla/mux v1.8.0
 	github.com/last9/last9-cdk/go/proc v0.0.0-20211209093125-ceff0e8ad651
 	github.com/last9/last9-cdk/go/tests v0.0.0-20211209093818-d351efae43f0
@@ -20,7 +21,6 @@ require (
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
-	github.com/go-chi/chi/v5 v5.0.7 // indirect
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/google/go-cmp v0.5.5 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
