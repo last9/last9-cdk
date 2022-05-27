@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/mux"
 	"github.com/last9/last9-cdk/go/proc"
 	"github.com/last9/pat"
@@ -165,6 +166,9 @@ func REDHandlerWithLabelMaker(g LabelMaker) func(http.Handler) http.Handler {
 			return t
 		case *pat.PatternServeMux:
 			t.Use(REDHandlerWithLabelMaker(g))
+			return t
+		case *chi.Mux:
+			// go-chi: all middlewares must be defined before routes on a mux
 			return t
 		}
 		return CustomREDHandler(g, next)

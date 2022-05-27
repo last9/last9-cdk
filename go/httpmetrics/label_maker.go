@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"path"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/mux"
 	"github.com/last9/pat"
 )
@@ -34,7 +35,10 @@ func figureOutLabelMaker(r *http.Request, m http.Handler) map[string]string {
 				break
 			}
 		}
+	case *chi.Mux:
+		perPath = chi.RouteContext(r.Context()).RoutePattern()
 	default:
+		// pat
 		if rk := r.Context().Value(pat.RouteKey); rk != nil {
 			perPath = rk.(string)
 			break
@@ -43,6 +47,11 @@ func figureOutLabelMaker(r *http.Request, m http.Handler) map[string]string {
 				perPath = p
 				break
 			}
+		}
+		// go-chi
+		if chiCtx, ok := r.Context().Value(chi.RouteCtxKey).(*chi.Context); ok && chiCtx != nil {
+			perPath = chiCtx.RoutePattern()
+			break
 		}
 	}
 
