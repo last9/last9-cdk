@@ -123,7 +123,7 @@ func RegisterDriverWithLabelMaker(d Options, fn LabelMaker) (string, error) {
 				c context.Context, ctx interface{}, conn *proxy.Conn, err error,
 			) error {
 				dsn := ctx.(string)
-				storeConnInfo(conn, dsn)
+				storeConnInfo(conn, name, dsn)
 				return nil
 			},
 
@@ -145,7 +145,7 @@ func RegisterDriverWithLabelMaker(d Options, fn LabelMaker) (string, error) {
 				dc := ctx.(*dbCtx)
 
 				if err := emitDuration(
-					fn(dc.query).Merge(
+					fn(name, dc.query).Merge(
 						info.LabelSet()), getQueryStatus(err), dc.start,
 				); err != nil {
 					log.Printf("%+v", err)
@@ -171,7 +171,7 @@ func RegisterDriverWithLabelMaker(d Options, fn LabelMaker) (string, error) {
 				dc := ctx.(*dbCtx)
 
 				if err := emitDuration(
-					fn(dc.query).Merge(
+					fn(name, dc.query).Merge(
 						info.LabelSet()), getQueryStatus(err), dc.start,
 				); err != nil {
 					log.Printf("%+v", err)

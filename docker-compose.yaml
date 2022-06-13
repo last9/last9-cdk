@@ -17,10 +17,35 @@ services:
       - /var/tmp
       - /var/log
       - /var/cache
+  
+  mysql57:
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_DATABASE: last9
+      MYSQL_USER: mysql
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+    ports:
+      # <Port exposed> : < MySQL Port running inside container>
+      - 8306:3306
+    expose:
+      # Opens port 3306 on the container
+      - '3306'
+      # Where our data will be persisted
+    volumes:
+      - my-db:/var/lib/mysql
 
-  wait_postgres:
+  wait_db:
     image: "waisbrot/wait"
     depends_on:
       - pg13
+      - mysql57
     environment:
       TARGETS: pg13:8432
+      TARGETS: mysql57:3306
+
+# Names our volume
+volumes:
+  my-db:
+    driver: local

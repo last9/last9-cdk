@@ -32,8 +32,8 @@ var (
 	connMap sync.Map
 )
 
-func storeConnInfo(conn *proxy.Conn, dsn string) error {
-	info, err := parseDSN(dsn)
+func storeConnInfo(conn *proxy.Conn, driverName, dsn string) error {
+	info, err := parseDSN(driverName, dsn)
 	if err != nil {
 		return errors.Wrap(err, "parse dsn")
 	}
@@ -51,8 +51,29 @@ func loadConnInfo(conn *proxy.Conn) *connInfo {
 	return info.(*connInfo)
 }
 
-func parseDSN(dsn string) (*connInfo, error) {
-	u, err := dburl.Parse(dsn)
+// Note: the DB Url library expects a scheme in the DSN for
+// all drivers, while the standard library `database/sql` expects some
+// DSNs to be passed without a scheme (e.g. mysql) and some with
+// a scheme (e.g. postgres).
+// This function hence expects you to pass a driver name along with the DSN for
+// successfully parsing the DSN.
+func parseDSN(driver, dsn string) (*connInfo, error) {
+
+	var SchemefullDSN string
+
+	switch strings.Split(driver, ":")[0] {
+	case "postgres":
+		{
+			SchemefullDSN = dsn
+		}
+	case "mysql":
+		{
+			//dsn = scheme + username + ":" + password + "@" + host + ":" + port + "/" + dbname
+			SchemefullDSN = strings.Split(driver, ":")[0] + "://" + strings.Split(dsn, "@")[0] + "@" + strings.Split(strings.Split(dsn, "(")[1], ")")[0] + strings.Split(strings.Split(dsn, "(")[1], ")")[1]
+		}
+	}
+
+	u, err := dburl.Parse(SchemefullDSN)
 	if err != nil {
 		return nil, errors.Wrap(err, "invalid dsn")
 	}

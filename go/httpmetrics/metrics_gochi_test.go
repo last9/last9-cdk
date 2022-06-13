@@ -40,7 +40,6 @@ func TestGoChiMux(t *testing.T) {
 
 		assert.Equal(t, len(ids) > 0, true)
 		rms := o["http_requests_duration_milliseconds"]
-		// fmt.Println(rms.GetMetric())
 		assert.Equal(t, 1, len(rms.GetMetric()))
 		assert.Equal(t, 7,
 			assertLabels("/api/{id}", getDomain(srv), rms))
