@@ -97,8 +97,8 @@ func emitStats(s sql.DBStats, labels LabelSet) {
 }
 
 // make Labels to be used for DB Stats
-func makeStatsLabels(dsn string) (LabelSet, error) {
-	info, err := parseDSN(dsn)
+func makeStatsLabels(driver, dsn string) (LabelSet, error) {
+	info, err := parseDSN(driver, dsn)
 	if err != nil {
 		return nil, errors.Wrap(err, "parse dsn emit db")
 	}
@@ -110,6 +110,7 @@ func makeStatsLabels(dsn string) (LabelSet, error) {
 
 	labels[proc.LabelProgram] = proc.GetProgamName()
 	labels[proc.LabelHostname] = proc.GetHostname()
+
 	return labels.Merge(info.LabelSet()), nil
 }
 
@@ -117,8 +118,8 @@ func makeStatsLabels(dsn string) (LabelSet, error) {
 // to emit the gauges and counters corresponding the connections spawned
 // by this binary. It's fairly light weight with minimal allocation so
 // performance should not really be a concern here.
-func EmitDBStats(db *sql.DB, dsn string) error {
-	l, err := makeStatsLabels(dsn)
+func EmitDBStats(db *sql.DB, driver, dsn string) error {
+	l, err := makeStatsLabels(driver, dsn)
 	if err != nil {
 		return errors.Wrap(err, "stats labels")
 	}

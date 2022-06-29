@@ -11,7 +11,7 @@ var (
 	subsystem     = "sql"
 	defaultLabels = []string{
 		"per", proc.LabelHostname, "table", "dbname", "dbhost", "status",
-		proc.LabelProgram, proc.LabelTenant, proc.LabelCluster,
+		proc.LabelProgram, proc.LabelTenant, proc.LabelCluster, "statement",
 	}
 
 	sqlQueryDuration = prometheus.NewHistogramVec(
