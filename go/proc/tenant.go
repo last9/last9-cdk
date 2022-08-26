@@ -2,6 +2,6 @@ package proc
 
 const (
 	LabelTenant  = "tenant"
-	LabelCluster = "cluster"
+	LabelCluster = "l9cluster"
 	Namespace    = "last9"
 )
