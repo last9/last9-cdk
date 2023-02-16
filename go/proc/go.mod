@@ -2,7 +2,7 @@ module github.com/last9/last9-cdk/go/proc
 
 go 1.17
 
-require github.com/prometheus/client_golang v1.11.0
+require github.com/prometheus/client_golang v1.11.1
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
