@@ -87,7 +87,7 @@ httpmetrics.REDHandler(handler)
 | http.ServeMux | Yes | Yes |
 | Gorilla | Yes | Yes |
 | Pat | Yes | Yes |
-| Chi | Yes | - |
+| Chi | Yes | Yes |
 
 ---
 
