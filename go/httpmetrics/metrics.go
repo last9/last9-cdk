@@ -15,10 +15,11 @@ import (
 )
 
 const (
-	labelDomain = "domain"
-	labelMethod = "method"
-	labelStatus = "status"
-	labelPer    = "per"
+	labelDomain    = "domain"
+	labelMethod    = "method"
+	labelStatus    = "status"
+	labelPer       = "per"
+	labelL6etenant = "l6etenant"
 )
 
 var (
@@ -26,6 +27,7 @@ var (
 	defaultLabels = []string{
 		labelPer, proc.LabelHostname, labelDomain, labelMethod,
 		proc.LabelProgram, labelStatus, proc.LabelTenant, proc.LabelCluster,
+		labelL6etenant,
 	}
 
 	// the ONLY metric that we emit is httpRequestsDuration
@@ -107,6 +109,7 @@ func CustomREDHandler(g LabelMaker, next http.Handler) http.Handler {
 			proc.LabelCluster:  "", // default cluster is empty
 			labelDomain:        r.Host,
 			labelMethod:        r.Method,
+			labelL6etenant:     "", // default l6etenant is empty
 		}
 
 		ctx := context.WithValue(r.Context(), enableMiddleware, "true")
@@ -141,6 +144,8 @@ func CustomREDHandler(g LabelMaker, next http.Handler) http.Handler {
 					}
 				}
 			}
+
+			labels[labelL6etenant] = labels[proc.LabelTenant]
 
 			httpRequestsDuration.With(labels).Observe(
 				float64(time.Since(start).Milliseconds()),
