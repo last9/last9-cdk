@@ -1,0 +1,13 @@
+{
+  "name": "@last9/cdk-core",
+  "version": "0.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "devDependencies": {
+    "@types/node": "^20.3.2",
+    "ts-node": "^10.9.1"
+  },
+  "scripts": {
+    "build": "tsc src/index.ts"
+  }
+}

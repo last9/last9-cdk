@@ -1,0 +1,13 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "allowJs": false,
+    "declaration": true,
+    "paths": {
+      "@last9/cdk-core": ["packages/core/src/index.ts"],
+      "@last9/cdk-express": ["packages/express/src/index.ts"]
+    }
+  }
+}

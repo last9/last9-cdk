@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "esModuleInterop": true,
+    "outDir": "dist",
+    "declaration": true
+  }
+}
