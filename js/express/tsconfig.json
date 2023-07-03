@@ -1,7 +1,7 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES5",
     "module": "ES2020",
     "moduleResolution": "node",
     "strict": true,
@@ -9,10 +9,12 @@
     "allowJs": false,
     "declaration": true,
     "declarationMap": true,
-    "emitDeclarationOnly": true,
+    "emitDeclarationOnly": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "types": ["node"],
     "outDir": "dist"
-  }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "**/*.spec.ts"]
 }

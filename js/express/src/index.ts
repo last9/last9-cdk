@@ -1,2 +1,2 @@
-export { default as promMiddleware } from './PromMiddleware';
-export type { PromMiddlewareOptions } from './PromMiddleware';
+export { default as CDK } from "./CDK";
+export type { CDKOptions } from "./CDK";
