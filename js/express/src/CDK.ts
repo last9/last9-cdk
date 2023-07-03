@@ -15,10 +15,12 @@ import type { IncomingMessage, ServerResponse } from "http";
 import { getHostIpAddress, getPackageJson, getParsedPathname } from "./utils";
 
 export interface CDKOptions {
-  /** Route where the metrics will be exposed */
+  /** Route where the metrics will be exposed
+   * @default "/metrics"
+   */
   path?: string;
-  /** Metrics server, By default the middleware uses existing Express app for the metrics route.
-   * This option helps to run the metrics route on a different server running on different port
+  /** Port for the metrics server
+   * @default 9097
    */
   metricsServerPort?: number;
   /** Application environment
@@ -47,19 +49,19 @@ export class CDK {
   private requestsCounter?: Counter;
   private requestsDurationHistogram?: Histogram;
 
-  constructor(options: CDKOptions) {
+  constructor(options?: CDKOptions) {
     // Initializing all the options
-    this.path = options.path ?? "/metrics";
-    this.metricsServerPort = options.metricsServerPort ?? 9097;
-    this.environment = options.environment ?? "production";
-    this.defaultLabels = options.defaultLabels;
-    this.requestsCounterConfig = options.requestsCounterConfig ?? {
+    this.path = options?.path ?? "/metrics";
+    this.metricsServerPort = options?.metricsServerPort ?? 9097;
+    this.environment = options?.environment ?? "production";
+    this.defaultLabels = options?.defaultLabels;
+    this.requestsCounterConfig = options?.requestsCounterConfig ?? {
       name: "http_requests_total",
       help: "Total number of requests",
       labelNames: ["path", "method", "status"],
     };
     this.requestDurationHistogramConfig =
-      options.requestDurationHistogramConfig || {
+      options?.requestDurationHistogramConfig || {
         name: "http_requests_duration_milliseconds",
         help: "Duration of HTTP requests in milliseconds",
         labelNames: ["path", "method", "status"],
@@ -87,7 +89,9 @@ export class CDK {
       gcDurationBuckets: this.requestDurationHistogramConfig.buckets,
     });
 
+    // Initiate the Counter for the requests
     this.requestsCounter = new promClient.Counter(this.requestsCounterConfig);
+    // Initiate the Duration Histogram for the requests
     this.requestsDurationHistogram = new promClient.Histogram(
       this.requestDurationHistogramConfig
     );

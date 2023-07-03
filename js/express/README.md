@@ -21,25 +21,34 @@ npm run build
 
 ## Usage
 
-In the example below, the metrics will be served on `localhost:3000/metrics`. To
-serve the metrics on different server use `metricsServer` option
+In the example below, the metrics will be served on `localhost:9097/metrics`. To
+change the port, you can update it through the options
 ([See the options documentation](#options)).
 
 ```js
 const express = require('express)
-const { promMiddleware } = require('@last9/cdk-express-js')
+const { CDK } = require('@last9/cdk-express-js')
 
 const app = express();
+const cdk = new CDK();
 
-app.use(promMiddleware({
-  path: '/metrics,
-}))
+app.use(cdk.REDMiddleware);
+
+// ...
 
 app.listen(3000)
 
 ```
 
 ## Options
+
+### Usage
+
+```js
+const cdk = new CDK({
+  // Options go here
+});
+```
 
 1. `path`: The path at which the metrics will be served. For ex. `/metrics`
 2. `metricsServerPort`: (Optional) The port at which the metricsServer will run.
