@@ -1,9 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import * as promClient from 'prom-client';
+import UrlValueParser from 'url-value-parser';
 
-const getPackageJson = () => {
+export const getPackageJson = () => {
   const packageJsonPath = path.join(process.cwd(), 'package.json');
   try {
     const packageJson = fs.readFileSync(packageJsonPath, 'utf-8');
@@ -14,13 +14,13 @@ const getPackageJson = () => {
   }
 };
 
-const getHostIpAddress = () => {
+export const getHostIpAddress = () => {
   const networkInterfaces = os.networkInterfaces();
 
   // Iterate over network interfaces to find a non-internal IPv4 address
   for (const interfaceName in networkInterfaces) {
     const interfaces = networkInterfaces[interfaceName];
-    if (interfaces) {
+    if (typeof interfaces !== 'undefined') {
       for (const iface of interfaces) {
         // Skip internal and non-IPv4 addresses
         if (!iface.internal && iface.family === 'IPv4') {
@@ -34,19 +34,11 @@ const getHostIpAddress = () => {
   return null;
 };
 
-export interface PromClientDefaultConfig {
-  environment?: string;
-}
-
-export const getPromClient = async ({ environment }: PromClientDefaultConfig) => {
-  const { version, name } = getPackageJson();
-  const ip = getHostIpAddress();
-  promClient.register.setDefaultLabels({
-    program: name,
-    version,
-    environment,
-    host: os.hostname(),
-    ip,
-  });
-  return promClient;
+export const getParsedPathname = (
+  pathname: string,
+  extraMasks: Array<RegExp>,
+  replacement: string = 'foo'
+) => {
+  const parser = new UrlValueParser({ extraMasks });
+  return parser.replacePathValues(pathname, replacement);
 };
