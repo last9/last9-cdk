@@ -37,7 +37,7 @@ export const getHostIpAddress = () => {
 export const getParsedPathname = (
   pathname: string,
   extraMasks?: Array<RegExp>,
-  replacement: string = "foo"
+  replacement: string = ":id"
 ) => {
   const parser = new UrlValueParser({ extraMasks });
   return parser.replacePathValues(pathname, replacement);

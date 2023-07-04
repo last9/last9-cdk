@@ -120,7 +120,7 @@ export class CDK {
       time: number
     ) => {
       if (this.path !== req.path) {
-        const parsedPathname = getParsedPathname(req.url ?? "/", undefined);
+        const parsedPathname = getParsedPathname(req.path ?? "/", undefined);
         const labels = {
           path: parsedPathname,
           status: res.statusCode.toString(),
