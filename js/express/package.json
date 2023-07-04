@@ -1,6 +1,6 @@
 {
   "name": "@last9/cdk-express-js",
-  "version": "0.1.0-alpha-2",
+  "version": "0.1.0-alpha-3",
   "main": "dist/cjs/index.js",
   "umd:main": "dist/umd/index.js",
   "module": "dist/esm/index.js",
