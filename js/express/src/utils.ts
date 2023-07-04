@@ -39,11 +39,6 @@ export const getParsedPathname = (
   extraMasks?: Array<RegExp>,
   replacement: string = "foo"
 ) => {
-  const normalizedPath = getPathFromUrl(pathname);
   const parser = new UrlValueParser({ extraMasks });
-  return parser.replacePathValues(normalizedPath, replacement);
+  return parser.replacePathValues(pathname, replacement);
 };
-
-function getPathFromUrl(url: string) {
-  return url.split(/[?#]/)[0];
-}

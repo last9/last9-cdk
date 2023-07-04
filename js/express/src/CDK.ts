@@ -9,7 +9,7 @@ import type {
   Histogram,
   HistogramConfiguration,
 } from "prom-client";
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import type { IncomingMessage, ServerResponse } from "http";
 
 import { getHostIpAddress, getPackageJson, getParsedPathname } from "./utils";
@@ -115,11 +115,11 @@ export class CDK {
   // metrics
   public REDMiddleware = ResponseTime(
     (
-      req: IncomingMessage,
+      req: IncomingMessage & Request,
       res: ServerResponse<IncomingMessage>,
       time: number
     ) => {
-      if (this.path !== req.url) {
+      if (this.path !== req.path) {
         const parsedPathname = getParsedPathname(req.url ?? "/", undefined);
         const labels = {
           path: parsedPathname,
