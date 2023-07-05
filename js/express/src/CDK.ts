@@ -1,18 +1,18 @@
-import * as os from "os";
-import express from "express";
-import ResponseTime from "response-time";
-import promClient from "prom-client";
+import * as os from 'os';
+import express from 'express';
+import ResponseTime from 'response-time';
+import promClient from 'prom-client';
 
 import type {
   Counter,
   CounterConfiguration,
   Histogram,
-  HistogramConfiguration,
-} from "prom-client";
-import type { Express, Request } from "express";
-import type { IncomingMessage, ServerResponse } from "http";
+  HistogramConfiguration
+} from 'prom-client';
+import type { Express, Request } from 'express';
+import type { IncomingMessage, ServerResponse } from 'http';
 
-import { getHostIpAddress, getPackageJson, getParsedPathname } from "./utils";
+import { getHostIpAddress, getPackageJson, getParsedPathname } from './utils';
 
 export interface CDKOptions {
   /** Route where the metrics will be exposed
@@ -51,21 +51,21 @@ export class CDK {
 
   constructor(options?: CDKOptions) {
     // Initializing all the options
-    this.path = options?.path ?? "/metrics";
+    this.path = options?.path ?? '/metrics';
     this.metricsServerPort = options?.metricsServerPort ?? 9097;
-    this.environment = options?.environment ?? "production";
+    this.environment = options?.environment ?? 'production';
     this.defaultLabels = options?.defaultLabels;
     this.requestsCounterConfig = options?.requestsCounterConfig ?? {
-      name: "http_requests_total",
-      help: "Total number of requests",
-      labelNames: ["path", "method", "status"],
+      name: 'http_requests_total',
+      help: 'Total number of requests',
+      labelNames: ['path', 'method', 'status']
     };
     this.requestDurationHistogramConfig =
       options?.requestDurationHistogramConfig || {
-        name: "http_requests_duration_milliseconds",
-        help: "Duration of HTTP requests in milliseconds",
-        labelNames: ["path", "method", "status"],
-        buckets: promClient.exponentialBuckets(0.25, 1.5, 31),
+        name: 'http_requests_duration_milliseconds',
+        help: 'Duration of HTTP requests in milliseconds',
+        labelNames: ['path', 'method', 'status'],
+        buckets: promClient.exponentialBuckets(0.25, 1.5, 31)
       };
 
     // Create the metrics server using express
@@ -82,11 +82,11 @@ export class CDK {
       version: packageJson.version,
       host: os.hostname(),
       ip: getHostIpAddress(),
-      ...this.defaultLabels,
+      ...this.defaultLabels
     });
 
     promClient.collectDefaultMetrics({
-      gcDurationBuckets: this.requestDurationHistogramConfig.buckets,
+      gcDurationBuckets: this.requestDurationHistogramConfig.buckets
     });
 
     // Initiate the Counter for the requests
@@ -101,7 +101,7 @@ export class CDK {
     // Adding merics route handler
     this.metricsServer.get(this.path, async (req, res) => {
       // Adding Content-Type header
-      res.set("Content-Type", promClient.register.contentType);
+      res.set('Content-Type', promClient.register.contentType);
       return res.end(await promClient.register.metrics());
     });
 
@@ -120,11 +120,11 @@ export class CDK {
       time: number
     ) => {
       if (this.path !== req.path) {
-        const parsedPathname = getParsedPathname(req.path ?? "/", undefined);
+        const parsedPathname = getParsedPathname(req.path ?? '/', undefined);
         const labels = {
           path: parsedPathname,
           status: res.statusCode.toString(),
-          method: req.method as string,
+          method: req.method as string
         };
 
         this.requestsCounter

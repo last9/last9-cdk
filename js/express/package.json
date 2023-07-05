@@ -1,6 +1,6 @@
 {
   "name": "@last9/cdk-express-js",
-  "version": "0.1.0-alpha-3",
+  "version": "0.1.0-alpha-4",
   "main": "dist/cjs/index.js",
   "umd:main": "dist/umd/index.js",
   "module": "dist/esm/index.js",
@@ -9,7 +9,7 @@
     "build": "rollup -c"
   },
   "peerDependencies": {
-    "express": "^4.18.2"
+    "express": "4.x"
   },
   "devDependencies": {
     "@babel/core": "^7.22.5",
@@ -21,6 +21,15 @@
     "@rollup/plugin-typescript": "^11.1.2",
     "@types/express": "^4.17.17",
     "@types/response-time": "^2.3.5",
+    "@typescript-eslint/eslint-plugin": "^5.61.0",
+    "@typescript-eslint/parser": "^5.61.0",
+    "eslint": "^8.44.0",
+    "eslint-config-semistandard": "^17.0.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-n": "^15.7.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "prettier": "2.8.8",
     "rollup": "^3.26.0",
     "ts-node": "^10.9.1",
     "tslib": "^2.6.0",
