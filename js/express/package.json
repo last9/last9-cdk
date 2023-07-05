@@ -6,7 +6,8 @@
   "module": "dist/esm/index.js",
   "browser": "dist/umd/index.js",
   "scripts": {
-    "build": "rollup -c"
+    "build": "rollup -c",
+    "test": "vitest"
   },
   "peerDependencies": {
     "express": "4.x"
@@ -23,19 +24,25 @@
     "@types/response-time": "^2.3.5",
     "@typescript-eslint/eslint-plugin": "^5.61.0",
     "@typescript-eslint/parser": "^5.61.0",
+    "axios": "^1.4.0",
     "eslint": "^8.44.0",
     "eslint-config-semistandard": "^17.0.0",
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-n": "^15.7.0",
     "eslint-plugin-promise": "^6.1.1",
+    "node-fetch": "^3.3.1",
+    "parse-prometheus-text-format": "^1.1.1",
     "prettier": "2.8.8",
     "rollup": "^3.26.0",
+    "supertest": "^6.3.3",
     "ts-node": "^10.9.1",
     "tslib": "^2.6.0",
-    "typescript": "^5.1.6"
+    "typescript": "^5.1.6",
+    "vitest": "^0.32.4"
   },
   "dependencies": {
+    "cors": "^2.8.5",
     "prom-client": "^14.2.0",
     "response-time": "^2.3.2",
     "url-value-parser": "^2.2.0"

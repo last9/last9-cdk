@@ -7,10 +7,11 @@ import type {
   Counter,
   CounterConfiguration,
   Histogram,
-  HistogramConfiguration
+  HistogramConfiguration,
+  Registry
 } from 'prom-client';
 import type { Express, Request } from 'express';
-import type { IncomingMessage, ServerResponse } from 'http';
+import type { IncomingMessage, ServerResponse, Server } from 'http';
 
 import { getHostIpAddress, getPackageJson, getParsedPathname } from './utils';
 
@@ -45,9 +46,11 @@ export class CDK {
   private requestsCounterConfig: CounterConfiguration<string>;
   private requestDurationHistogramConfig: HistogramConfiguration<string>;
 
-  private metricsServer: Express;
+  private metricsApp: Express;
   private requestsCounter?: Counter;
   private requestsDurationHistogram?: Histogram;
+  public metricsServer?: Server;
+  public promRegister?: Registry;
 
   constructor(options?: CDKOptions) {
     // Initializing all the options
@@ -68,14 +71,15 @@ export class CDK {
         buckets: promClient.exponentialBuckets(0.25, 1.5, 31)
       };
 
-    // Create the metrics server using express
-    this.metricsServer = express();
+    // Create the metrics app using express
+    this.metricsApp = express();
 
     this.initiateMetricsRoute();
     this.initiatePromClient();
   }
 
   private initiatePromClient = () => {
+    this.promRegister = promClient.register;
     promClient.register.setDefaultLabels({
       environment: this.environment,
       program: packageJson.name,
@@ -99,14 +103,14 @@ export class CDK {
 
   private initiateMetricsRoute = () => {
     // Adding merics route handler
-    this.metricsServer.get(this.path, async (req, res) => {
+    this.metricsApp.get(this.path, async (req, res) => {
       // Adding Content-Type header
       res.set('Content-Type', promClient.register.contentType);
       return res.end(await promClient.register.metrics());
     });
 
     // Listening metrics server
-    this.metricsServer.listen(this.metricsServerPort, () => {
+    this.metricsServer = this.metricsApp.listen(this.metricsServerPort, () => {
       console.log(`Metrics server started at port ${this.metricsServerPort}`);
     });
   };
