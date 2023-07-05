@@ -50,7 +50,6 @@ export class CDK {
   private requestsCounter?: Counter;
   private requestsDurationHistogram?: Histogram;
   public metricsServer?: Server;
-  public promRegister?: Registry;
 
   constructor(options?: CDKOptions) {
     // Initializing all the options
@@ -79,7 +78,6 @@ export class CDK {
   }
 
   private initiatePromClient = () => {
-    this.promRegister = promClient.register;
     promClient.register.setDefaultLabels({
       environment: this.environment,
       program: packageJson.name,
