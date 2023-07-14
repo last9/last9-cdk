@@ -1,0 +1,56 @@
+name: 📦 Release @last9/cdk-express-js
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛎 Checkout
+        uses: actions/checkout@v3
+
+      - name: ⬢ Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16.20.0
+          registry-url: "https://npm.pkg.github.com"
+
+      #- name: 🔍 Get npm cache directory path
+      # id: yarn-cache-dir-path
+      # run: echo "::set-output name=dir::$(yarn cache dir)"
+
+      - name: 🧶 Get NPM cache
+        uses: actions/cache@v3
+        id: cache-npm # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: ~/.npm
+          key:
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{
+            hashFiles('**/package-lock.json') }},
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+
+      - name: 🗂️ Change Directory
+        run: cd js/express
+
+      - name: 📦 Install dependencies
+        run: npm install --frozen-lockfile
+
+      - name: 👷 Build
+        run: npm run build
+
+      - name: 🚀 Publish release
+        if:
+          startsWith(github.ref, 'refs/tags/') &&
+          contains(github.event.release.tag_name, '@last9/cdk-express-js')
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm publish --non-interactive
