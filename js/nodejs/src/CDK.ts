@@ -11,6 +11,7 @@ import type {
 import type { Server } from 'http';
 
 import { getHostIpAddress, getPackageJson, getSanitizedPath } from './utils';
+import instrumentExpress from './clients/express';
 
 export interface CDKOptions {
   /** Route where the metrics will be exposed
@@ -118,6 +119,9 @@ export class CDK {
   public instrument<MS>(moduleName: 'mysql', mysql: MS): void;
   public instrument(moduleName: string, module: any): void {
     // Implementation logic goes here
+    if (moduleName === 'express') {
+      instrumentExpress(module);
+    }
     return;
   }
 }
