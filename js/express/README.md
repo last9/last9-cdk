@@ -1,5 +1,11 @@
 # @last9/cdk-express-js
 
+## Installation
+
+```
+npm install --save @last9/cdk-express-js@0.1.0
+```
+
 ## Setup locally
 
 Make sure you are in the express directory
