@@ -38,16 +38,16 @@ jobs:
             ${{ runner.os }}-build-
             ${{ runner.os }}-
 
-      - name: 🗂️ Change Directory
-        run: cd js/express
-
       - name: 📦 Install dependencies
+        working-directory: ./js/express
         run: npm install --frozen-lockfile
 
       - name: 👷 Build
+        working-directory: ./js/express
         run: npm run build
 
       - name: 🚀 Publish release
+        working-directory: ./js/express
         if:
           startsWith(github.ref, 'refs/tags/') &&
           contains(github.event.release.tag_name, '@last9/cdk-express-js')
