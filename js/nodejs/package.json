@@ -43,6 +43,7 @@
   "license": "ISC",
   "dependencies": {
     "prom-client": "^14.2.0",
+    "response-time": "^2.3.2",
     "url-value-parser": "^2.2.0",
     "yaml": "^2.3.1"
   }

@@ -81,17 +81,6 @@ export class CDK {
       ip: getHostIpAddress(),
       ...this.defaultLabels
     });
-
-    prom.collectDefaultMetrics({
-      gcDurationBuckets: this.requestDurationHistogramConfig.buckets
-    });
-
-    // Initiate the Counter for the requests
-    this.requestsCounter = new prom.Counter(this.requestsCounterConfig);
-    // Initiate the Duration Histogram for the requests
-    this.requestsDurationHistogram = new prom.Histogram(
-      this.requestDurationHistogramConfig
-    );
   };
 
   private initiateMetricsRoute = () => {
