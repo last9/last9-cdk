@@ -1,1 +1,2 @@
-console.log('Hello World');
+export { default as CDK } from "./CDK";
+export type { CDKOptions } from "./CDK";
