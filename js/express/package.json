@@ -1,5 +1,6 @@
 {
   "name": "@last9/cdk-express-js",
+  "description": "Last9 Open APM CDK for Express.js",
   "version": "0.1.0",
   "main": "dist/cjs/index.js",
   "umd:main": "dist/umd/index.js",
@@ -9,9 +10,17 @@
     "build": "rollup -c",
     "test": "vitest"
   },
+  "license": "Apache-2.0",
+  "author": "Last9 team <hi@last9.io>",
   "peerDependencies": {
     "express": "4.x"
   },
+  "keywords": [
+    "last9",
+    "metrics",
+    "apm",
+    "prometheus"
+  ],
   "devDependencies": {
     "@babel/core": "^7.22.5",
     "@babel/preset-env": "^7.22.5",
