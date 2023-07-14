@@ -28,10 +28,6 @@ export interface CDKOptions {
   environment?: string;
   /** Any default labels you want to include */
   defaultLabels?: Record<string, string>;
-  /** Accepts configuration for Prometheus Counter  */
-  requestsCounterConfig?: CounterConfiguration<string>;
-  /** Accepts configuration for Prometheus Histogram */
-  requestDurationHistogramConfig?: HistogramConfiguration<string>;
 }
 
 const packageJson = getPackageJson();
@@ -41,8 +37,6 @@ export class CDK {
   private metricsServerPort: number;
   private environment: string;
   private defaultLabels?: Record<string, string>;
-  private requestsCounterConfig: CounterConfiguration<string>;
-  private requestDurationHistogramConfig: HistogramConfiguration<string>;
 
   private requestsCounter?: Counter;
   private requestsDurationHistogram?: Histogram;
@@ -54,18 +48,6 @@ export class CDK {
     this.metricsServerPort = options?.metricsServerPort ?? 9097;
     this.environment = options?.environment ?? 'production';
     this.defaultLabels = options?.defaultLabels;
-    this.requestsCounterConfig = options?.requestsCounterConfig ?? {
-      name: 'http_requests_total',
-      help: 'Total number of requests',
-      labelNames: ['path', 'method', 'status']
-    };
-    this.requestDurationHistogramConfig =
-      options?.requestDurationHistogramConfig || {
-        name: 'http_requests_duration_milliseconds',
-        help: 'Duration of HTTP requests in milliseconds',
-        labelNames: ['path', 'method', 'status'],
-        buckets: prom.exponentialBuckets(0.25, 1.5, 31)
-      };
 
     this.initiateMetricsRoute();
     this.initiatePromClient();
@@ -107,7 +89,6 @@ export class CDK {
   public instrument<E>(moduleName: 'express', express: E): void;
   public instrument<MS>(moduleName: 'mysql', mysql: MS): void;
   public instrument(moduleName: string, module: any): void {
-    // Implementation logic goes here
     if (moduleName === 'express') {
       instrumentExpress(module);
     }
