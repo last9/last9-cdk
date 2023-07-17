@@ -2,16 +2,13 @@ import * as os from 'os';
 import http from 'http';
 import prom from 'prom-client';
 
-import type {
-  Counter,
-  CounterConfiguration,
-  Histogram,
-  HistogramConfiguration
-} from 'prom-client';
+import type { Counter, Histogram } from 'prom-client';
 import type { Server } from 'http';
 
 import { getHostIpAddress, getPackageJson, getSanitizedPath } from './utils';
+// Client imports
 import instrumentExpress from './clients/express';
+import instrumentMysql from './clients/mysql';
 
 export interface CDKOptions {
   /** Route where the metrics will be exposed
@@ -86,11 +83,16 @@ export class CDK {
   };
 
   // Function overloads for all supported modules
-  public instrument<E>(moduleName: 'express', express: E): void;
-  public instrument<MS>(moduleName: 'mysql', mysql: MS): void;
+  public instrument<E>(moduleName: 'express', module: E): void;
+  public instrument<MS>(moduleName: 'mysql', module: MS): void;
   public instrument(moduleName: string, module: any): void {
     if (moduleName === 'express') {
       instrumentExpress(module);
+      return;
+    }
+
+    if (moduleName === 'mysql') {
+      instrumentMysql(module);
     }
     return;
   }

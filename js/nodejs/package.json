@@ -29,6 +29,7 @@
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-n": "^15.7.0",
     "eslint-plugin-promise": "^6.1.1",
+    "express": "^4.18.2",
     "node-fetch": "^3.3.1",
     "parse-prometheus-text-format": "^1.1.1",
     "prettier": "2.8.8",
@@ -42,7 +43,6 @@
   "author": "Last9<hi@last9.io>",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.18.2",
     "prom-client": "^14.2.0",
     "response-time": "^2.3.2",
     "url-value-parser": "^2.2.0"
