@@ -15,13 +15,13 @@ const instrumentMysql = (mysqlInstance: {
           if (prop === 'query') {
             return function (...args: Parameters<QueryFunction>) {
               if (typeof args[0] === 'string') {
-                console.log(args[0]);
+                console.log('APM ', args[0]);
               } else if (typeof args[0].sql === 'string') {
-                console.log(args[0].sql);
+                console.log('APM ', args[0].sql);
               }
               // @ts-ignore
               return Reflect.apply(target[prop], this, args);
-            } as QueryFunction;
+            };
           }
           return Reflect.get(target, prop, receiver);
         }

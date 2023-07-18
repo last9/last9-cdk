@@ -61,8 +61,8 @@ const instrumentExpress = (
   );
   //////////////////////////
 
-  let hasMiddlewareMounted = false;
   // Add the middleware to the application
+  let hasMiddlewareMounted = false;
   type AppUseType = typeof expressInstance.application.use;
   const originalUse = expressInstance.application.use;
 
@@ -79,20 +79,20 @@ const instrumentExpress = (
   } as AppUseType;
 
   // Add the middleware to the application
-  type RouterUseType = typeof expressInstance.Router.use;
-  const originalRouterUse = expressInstance.Router.use;
+  // type RouterUseType = typeof expressInstance.Router.use;
+  // const originalRouterUse = expressInstance.Router.use;
 
-  // Overiding the use function in router and adding the express middleware
-  expressInstance.Router.use = function use() {
-    // Avoid mounting the middleware twice
-    if (!hasMiddlewareMounted) {
-      // @ts-ignore
-      originalRouterUse.apply(this, [REDmiddleware]);
-      hasMiddlewareMounted = true;
-    }
-    // @ts-ignore
-    originalRouterUse.apply(this, arguments);
-  } as RouterUseType;
+  // // Overiding the use function in router and adding the express middleware
+  // expressInstance.Router.use = function use() {
+  //   // Avoid mounting the middleware twice
+  //   if (!hasMiddlewareMounted) {
+  //     // @ts-ignore
+  //     originalRouterUse.apply(this, [REDmiddleware]);
+  //     hasMiddlewareMounted = true;
+  //   }
+  //   // @ts-ignore
+  //   originalRouterUse.apply(this, arguments);
+  // } as RouterUseType;
 };
 
 export default instrumentExpress;
