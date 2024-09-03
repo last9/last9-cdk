@@ -1,6 +1,8 @@
 package httpmetrics
 
 import (
+	"bufio"
+	"net"
 	"net/http"
 	"sync"
 )
@@ -29,6 +31,15 @@ func (rw *ResponseWriter) Code() int {
 func (rw *ResponseWriter) WriteHeader(statusCode int) {
 	rw.code = statusCode
 	rw.w.WriteHeader(statusCode)
+}
+
+func (rw *ResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	hj, ok := rw.w.(http.Hijacker)
+	if !ok {
+		return nil, nil, http.ErrNotSupported
+	}
+
+	return hj.Hijack()
 }
 
 func (rw *ResponseWriter) Write(data []byte) (int, error) {
